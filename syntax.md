@@ -1,5 +1,5 @@
 # Alpha Compiler #
-Given an alpha equation, this tool Generates Python code to be used on Quantopian's platform or in Zipline. 
+Given an alpha equation, this tool generates Python code to be used on Quantopian's platform or in Zipline. 
 The code generated can be cut and pasted directly into your Quantopian
 code.  For examples of how to use factors and the necessary includes, please see the latest notebook posted [here](https://www.quantopian.com/posts/alpha-compiler#581939e7fb861562e4000246 "Alpha Complier Discussion on Quantopian").  The code genrates a custom factor named AlphaX, if you are going to use multiple generated here you will need to change the name of AlphaX to something unique for each factor.  
 
