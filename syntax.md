@@ -8,6 +8,7 @@ The syntax is inspired by the document [101 Formulaic Alphas](https://papers.ssr
 
 ### Inputs ###
 The following can be used as inputs:
+
 *   open, high, low, close, volume
 *   returns
 *   cap
