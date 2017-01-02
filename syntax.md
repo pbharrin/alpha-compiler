@@ -15,11 +15,13 @@ The following can be used as inputs:
 *   vwap  It should be noted that Quantopian's VWAP is not computed the same way that the rest of the industry compues VWAP.  On Quantopian's platform VWAP is treated as another factor and uses daily price and volume.  
 *   `adv*` where * is an integer.  For example: `adv8` computes the ADV over the last 8 days.  
 
+
 ## Unirary Operators ##
 
 *   abs 
 *   sign
 *   rank
+
 
 ## Binary Operators ##
 
@@ -31,9 +33,11 @@ The following can be used as inputs:
 *   signedpower
 *   indneutralize
 
+
 ## Ternary Operator ##
 
 *  A ? Y : Z  This is the C-style ternary operator that is shorthand for if A then Y else Z.  
+
 
 ## Time-Series Operators ##
 The time-series operators as a special case of binary operators where the last argument is the number of days.  In the inspiration paper this could be any positive real number, but it this implementation the number needs to be a positive integer.  For example the `delay(sig, N)` operator will return a version of the `sig` data delayed N days.  
