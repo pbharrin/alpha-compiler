@@ -6,6 +6,14 @@ code.  For examples of how to use factors see the latest notebook posted [here](
 ## Syntax ##
 The syntax is inspired by the document [101 Formulaic Alphas](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2701346 "101 Alphas" ) by Zura Kakushadze.  I recommend you read that paper if you creating your own alphas.
 
+### Inputs ###
+The following can be used as inputs:
+*   open, high, low, close, volume
+*   returns
+*   cap
+*   vwap  It should be noted that Quantopian's VWAP is not computed the same way that the rest of the industry compues VWAP.  On Quantopian's platform VWAP is treated as another factor and uses daily price and volume.  
+*   `adv*` where * is an integer.  For example: `adv8` computes the ADV over the last 8 days.  
+
 ## Unirary Operators ##
 
 *   abs 
@@ -15,7 +23,7 @@ The syntax is inspired by the document [101 Formulaic Alphas](https://papers.ssr
 ## Binary Operators ##
 
 *   The usual infix algebraic operators can be used: `+,-,/,*`
-*   Logical infix operators can be used as well: `>,<, ||, &&`k
+*   Logical infix operators can be used as well: `>,<, ||, &&`
 *   max
 *   min
 *   scale
