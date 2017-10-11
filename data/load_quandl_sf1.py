@@ -5,26 +5,19 @@
 # Quandl API key to be set as an ENV variable QUANDL_API_KEY.
 
 import quandl
-from os import environ
-import sys
+
+from util import zipline_data_tools
+from util import quandl_tools
+from logbook import Logger
 
 DS_NAME = "SF1"   # quandl DataSet code
 RAW_FLDR = "raw"  # folder to store the raw text file
 VAL_COL_NAME = "Value"
 
-# TODO: move this function to utils/
-def set_api_key():
-    """read QUANDL_API_KEY env variable, and set it."""
-    try:
-        api_key = environ["QUANDL_API_KEY"]
-    except KeyError:
-        print("could not read the env variable: QUANDL_API_KEY")
-        sys.exit()
-    quandl.ApiConfig.api_key = api_key
-
+log = Logger('load_quandl_sf1.py')
 
 def populate_raw_data(tickers, fields, at_time_of):
-    set_api_key()
+    quandl_tools.set_api_key()
 
     global suffix
     if at_time_of:
@@ -54,9 +47,14 @@ def populate_raw_data(tickers, fields, at_time_of):
         all_fields.to_csv("{}/{}.csv".format(RAW_FLDR, ticker))
 
 
+
 if __name__ == '__main__':
 
+    # demo works on free data
     tickers = ["WMT"]
+    tickers = zipline_data_tools.get_tickers_from_bundle("")
+    print ()
+
     fields = ["GP", "CAPEX", "EBIT", "ASSETS"]
     at_time_of = False  # if this is true append "", else append "_MRQ"
 
