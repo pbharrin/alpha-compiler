@@ -27,8 +27,10 @@ def populate_raw_data(tickers, fields, at_time_of):
 
     # for every ticker in ticker_list get
     fields_a = map(lambda s: "%s_%s" % (s, suffix), fields)
-    all_fields = None
+
     for ticker in tickers:
+        all_fields = None
+
         for field in fields_a:
 
             query_str = "%s/%s_%s" % (DS_NAME, ticker, field)
@@ -51,13 +53,15 @@ def populate_raw_data(tickers, fields, at_time_of):
 if __name__ == '__main__':
 
     # demo works on free data
-    tickers = ["WMT"]
-    tickers = zipline_data_tools.get_tickers_from_bundle("")
-    print ()
+    #tickers = ["WMT", "HD", "CSCO"]
+    #fields = ["GP", "CAPEX", "EBIT", "ASSETS"]
+    #at_time_of = False  # if this is true append "", else append "_MRQ"
+    #populate_raw_data(tickers, fields, at_time_of)
+
+    tickers = zipline_data_tools.get_tickers_from_bundle('quantopian-quandl')
+    print(tickers[:20])
 
     fields = ["GP", "CAPEX", "EBIT", "ASSETS"]
-    at_time_of = False  # if this is true append "", else append "_MRQ"
-
-    populate_raw_data(tickers, fields, at_time_of)
+    populate_raw_data(tickers, fields, True)
 
     print("this worked boss")

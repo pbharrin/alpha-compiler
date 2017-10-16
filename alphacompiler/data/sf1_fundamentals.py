@@ -9,6 +9,13 @@ Zipline's Pipeline.
 from zipline.pipeline.factors import CustomFactor
 import numpy as np
 
+
+class RandomFactor(CustomFactor):
+    """Returns a random number, for demo purposes"""
+    def compute(self, today, assets, out, *arrays):
+
+        out[:] = np.random.random(assets.shape) 
+
 # TODO: move this class to its own file, perhaps in util
 class SparseDataFactor(CustomFactor):
     """Abstract Base Class to be used for computing """
