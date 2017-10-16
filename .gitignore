@@ -91,3 +91,5 @@ ENV/
 # Don't check in raw data
 alphacompiler/data/raw/
 .idea/
+.DS_Store
+
