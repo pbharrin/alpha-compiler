@@ -12,7 +12,10 @@ import numpy as np
 
 class RandomFactor(CustomFactor):
     """Returns a random number, for demo purposes"""
-    def compute(self, today, assets, out, *arrays):
+    inputs = []
+    window_length = 1 
+
+    def compute(self, today, assets, out):
 
         out[:] = np.random.random(assets.shape) 
 
