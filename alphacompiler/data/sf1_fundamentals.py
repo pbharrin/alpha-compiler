@@ -8,24 +8,79 @@ Zipline's Pipeline.
 
 from zipline.pipeline.factors import CustomFactor
 import numpy as np
+from os import listdir
+import pandas as pd
+import numpy as np
 
 
 class RandomFactor(CustomFactor):
     """Returns a random number, for demo purposes"""
     inputs = []
-    window_length = 1 
+    window_length = 1
 
     def compute(self, today, assets, out):
+        print "assets.shape: ",assets.shape
+        out[:] = np.random.random(assets.shape)
 
-        out[:] = np.random.random(assets.shape) 
+class RandomFactor2(CustomFactor):
+    """Returns two random numbers, for demo purposes"""
+    inputs = []
+    window_length = 1
+    outputs = ["rand0", "rand1"]
+
+    def compute(self, today, assets, out):
+        # out[:] = np.random.random(assets.shape) # 2 outputs
+        out.rand0 = np.random.random(assets.shape)
+        out.rand1 = np.random.random(assets.shape)
+
 
 # TODO: move this class to its own file, perhaps in util
 class SparseDataFactor(CustomFactor):
     """Abstract Base Class to be used for computing """
+    inputs = []
+    window_length = 1
+    outputs = ["GP_MRQ", "CAPEX_MRQ"]   # TODO: figure out how to pass this in
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.time_index = None
         self.curr_date = None # date for which time_index is accurate
+        self.data = None
+
+    def load_data_from_disk(self):
+        """Populate memory (self.data) with data from disk"""
+        print "        ########    populating data"
+
+        # create buffer to hold data for all tickers
+        dfs = [None] * self.N
+
+        max_len = -1
+        for fn in listdir(self.raw_path):
+            if not fn.endswith(".csv"):
+                continue
+            df = pd.read_csv(self.raw_path + fn, index_col="Date", parse_dates=True)
+            sid = int(fn.split('.')[0])
+            dfs[sid] = df
+
+            # width is max number of rows in any file
+            max_len = max(max_len, df.shape[0])
+
+        # pack up data as buffer
+        num_fundamentals = 2          # TODO: get this from the constructor
+        buff = np.full((num_fundamentals + 1, self.N, max_len),np.nan)
+        # pack self.data as np.recarray
+        self.data = np.recarray(shape=(self.N, max_len),
+                                dtype=[('date', '<f8'),
+                                       ('GP_MRQ', '<f8'),
+                                       ('CAPEX_MRQ', '<f8')])
+
+        # iterate over loaded data and populate self.data
+        for i, df in enumerate(dfs):
+            if df is None:
+                continue
+            print "****************    df.index:", df.index
+            self.data.date[i] = df.index
+            self.data['GP_MRQ'][i] = df['GP_MRQ']  # TODO: get these field names from constructor
+            self.data['CAPEX_MRQ'][i] = df['CAPEX_MRQ']
 
     def bs_sparse_time(self, sid):
         # do a binary search of the dates array finding the index
@@ -33,13 +88,16 @@ class SparseDataFactor(CustomFactor):
         pass
 
     def cold_start(self, today, assets):
+        if self.data is None:
+            self.load_data_from_disk()
         # for each sid, do binary search of date array to find current index
         # the results can be shared across all factors that inherit from SparseDataFactor
         # this sets an array of ints: time_index
-        self.time_index = np.full(assets.shape[0], -1)
+        self.time_index = np.full(self.N, -1)
         self.curr_date = today
-        for asset in assets:
-            self.time_index[asset.sid] = self.bs_sparse_time(asset.sid)
+        for asset in assets:  # asset is numpy.int64
+            self.time_index[asset] = self.bs_sparse_time(asset)
+        print "filled up self.time_index"
 
     def update_time_index(self, today):
         self.curr_date = today
@@ -55,12 +113,12 @@ class SparseDataFactor(CustomFactor):
         if self.curr_date != today:
             self.update_time_index(today)
 
-        out[:] = data[self.time_index]
+        out.GP_MRQ[:] = self.data.GP_MRQ[self.time_index]
+        out.CAPEX_MRQ[:] = self.data.CAPEX_MRQ[self.time_index]
 
-# transfer data from memory
+
 class CAPEX(SparseDataFactor):
-    field = "CAPEX"
-
-    def compute(self, today, assets, out):
-
-        out[:] = 0.69
+    def __init__(self, *args, **kwargs):
+        super(CAPEX, self).__init__(*args, **kwargs)
+        self.N = 3193  #(max sid +1) get this from the bundle
+        self.raw_path = "/Users/peterharrington/Documents/GitHub/alpha-compiler/alphacompiler/data/raw/"
