@@ -80,10 +80,26 @@ class SparseDataFactor(CustomFactor):
         for i, df in enumerate(dfs):
             if df is None:
                 continue
-            print "****************    df.index:", df.index
             self.data.date[i] = df.index
             self.data['GP_MRQ'][i] = df['GP_MRQ']  # TODO: get these field names from constructor
             self.data['CAPEX_MRQ'][i] = df['CAPEX_MRQ']
+
+
+    def bs(self, arr):
+        """Binary Search"""
+        if len(arr) == 1:
+            if self.curr_date < arr[0]:
+                return 0
+            else: return 1
+
+        mid = len(arr) / 2
+        if self.curr_date < arr[mid]:
+            print "   IT was less than the middle date"
+            return self.bs(arr[:mid])
+        else:
+            print "   IT was AFTER than the middle date"
+            return mid + self.bs(arr[mid:])
+
 
     def bs_sparse_time(self, sid):
         dates_for_sid = self.data.date[sid]
@@ -92,9 +108,8 @@ class SparseDataFactor(CustomFactor):
 
         # do a binary search of the dates array finding the index
         # where self.curr_date will lie.
+        return self.bs(dates_for_sid) - 1
 
-        # TODO: do the actual binary search here.
-        return 0
 
     def cold_start(self, today, assets):
         if self.data is None:
@@ -104,13 +119,13 @@ class SparseDataFactor(CustomFactor):
         # the results can be shared across all factors that inherit from SparseDataFactor
         # this sets an array of ints: time_index
         self.time_index = np.full(self.N, -1, np.dtype('int64'))
-        self.curr_date = today
+        self.curr_date = today.value
         for asset in assets:  # asset is numpy.int64
             self.time_index[asset] = self.bs_sparse_time(asset)
 
     def update_time_index(self, today):
         print "updating time index   ************** updating time index   **************"
-        self.curr_date = today
+        self.curr_date = today.value
         # for each asset check if today >= dates[self.time_index]
         # if so then increment self.time_index[asset.sid] += 1
 
@@ -133,8 +148,8 @@ class SparseDataFactor(CustomFactor):
         out.CAPEX_MRQ[:] = self.data.CAPEX_MRQ[assets, ti_used_today]
 
 
-class CAPEX(SparseDataFactor):
+class Fundamentals(SparseDataFactor):
     def __init__(self, *args, **kwargs):
-        super(CAPEX, self).__init__(*args, **kwargs)
+        super(Fundamentals, self).__init__(*args, **kwargs)
         self.N = 3193  #(max sid +1) get this from the bundle
         self.raw_path = "/Users/peterharrington/Documents/GitHub/alpha-compiler/alphacompiler/data/raw/"
