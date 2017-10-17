@@ -102,6 +102,7 @@ class SparseDataFactor(CustomFactor):
 
 
     def bs_sparse_time(self, sid):
+        """For each security find the best range in the sparse data."""
         dates_for_sid = self.data.date[sid]
         if np.isnan(dates_for_sid[0]):
             return 0
@@ -123,27 +124,27 @@ class SparseDataFactor(CustomFactor):
         for asset in assets:  # asset is numpy.int64
             self.time_index[asset] = self.bs_sparse_time(asset)
 
-    def update_time_index(self, today):
-        print "updating time index   ************** updating time index   **************"
-        self.curr_date = today.value
+    def update_time_index(self, today, assets, ti_today):
+        """Ratchet update."""
+
         # for each asset check if today >= dates[self.time_index]
         # if so then increment self.time_index[asset.sid] += 1
+        sids_to_increment = today.value >= self.data.date[np.arange(self.N), self.time_index]
+        self.time_index[sids_to_increment] += 1
 
-        # TODO: this needs work
+        self.curr_date = today.value
 
-        pass
 
     def compute(self, today, assets, out, *arrays):
         # for each asset in assets determine index from date (today)
         if self.time_index is None:
             self.cold_start(today, assets)
 
-        if self.curr_date != today:
-            self.update_time_index(today)
-
-        print "self.time_index: ", self.time_index
-
         ti_used_today = self.time_index[assets]
+
+        if self.curr_date != today:
+            self.update_time_index(today, assets, ti_used_today)
+
         out.GP_MRQ[:] = self.data.GP_MRQ[assets, ti_used_today]
         out.CAPEX_MRQ[:] = self.data.CAPEX_MRQ[assets, ti_used_today]
 
