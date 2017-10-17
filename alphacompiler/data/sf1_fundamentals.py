@@ -47,8 +47,10 @@ class SparseDataFactor(CustomFactor):
         self.data = None
 
     def load_data_from_disk(self):
-        """Populate memory (self.data) with data from disk"""
-        print "        ########    populating data"
+        """Populate memory (self.data) with data from disk
+        Some of this could be done at the data download time, so the final array
+        is loaded from disk.
+        """
 
         # create buffer to hold data for all tickers
         dfs = [None] * self.N
@@ -66,9 +68,10 @@ class SparseDataFactor(CustomFactor):
 
         # pack up data as buffer
         num_fundamentals = 2          # TODO: get this from the constructor
-        buff = np.full((num_fundamentals + 1, self.N, max_len),np.nan)
+        buff = np.full((num_fundamentals + 1, self.N, max_len), np.nan)
         # pack self.data as np.recarray
         self.data = np.recarray(shape=(self.N, max_len),
+                                buf=buff,
                                 dtype=[('date', '<f8'),
                                        ('GP_MRQ', '<f8'),
                                        ('CAPEX_MRQ', '<f8')])
@@ -83,26 +86,36 @@ class SparseDataFactor(CustomFactor):
             self.data['CAPEX_MRQ'][i] = df['CAPEX_MRQ']
 
     def bs_sparse_time(self, sid):
+        dates_for_sid = self.data.date[sid]
+        if np.isnan(dates_for_sid[0]):
+            return 0
+
         # do a binary search of the dates array finding the index
         # where self.curr_date will lie.
-        pass
+
+        # TODO: do the actual binary search here.
+        return 0
 
     def cold_start(self, today, assets):
         if self.data is None:
             self.load_data_from_disk()
+
         # for each sid, do binary search of date array to find current index
         # the results can be shared across all factors that inherit from SparseDataFactor
         # this sets an array of ints: time_index
-        self.time_index = np.full(self.N, -1)
+        self.time_index = np.full(self.N, -1, np.dtype('int64'))
         self.curr_date = today
         for asset in assets:  # asset is numpy.int64
             self.time_index[asset] = self.bs_sparse_time(asset)
-        print "filled up self.time_index"
 
     def update_time_index(self, today):
+        print "updating time index   ************** updating time index   **************"
         self.curr_date = today
         # for each asset check if today >= dates[self.time_index]
         # if so then increment self.time_index[asset.sid] += 1
+
+        # TODO: this needs work
+
         pass
 
     def compute(self, today, assets, out, *arrays):
@@ -113,8 +126,11 @@ class SparseDataFactor(CustomFactor):
         if self.curr_date != today:
             self.update_time_index(today)
 
-        out.GP_MRQ[:] = self.data.GP_MRQ[self.time_index]
-        out.CAPEX_MRQ[:] = self.data.CAPEX_MRQ[self.time_index]
+        print "self.time_index: ", self.time_index
+
+        ti_used_today = self.time_index[assets]
+        out.GP_MRQ[:] = self.data.GP_MRQ[assets, ti_used_today]
+        out.CAPEX_MRQ[:] = self.data.CAPEX_MRQ[assets, ti_used_today]
 
 
 class CAPEX(SparseDataFactor):
