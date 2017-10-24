@@ -9,33 +9,28 @@ import quandl
 from util import zipline_data_tools
 from util import quandl_tools
 from logbook import Logger
+import datetime
 
 DS_NAME = "SF1"   # quandl DataSet code
 RAW_FLDR = "raw"  # folder to store the raw text file
 VAL_COL_NAME = "Value"
+START_DATE = '2010-01-01'
+END_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
+
 
 log = Logger('load_quandl_sf1.py')
 
-def populate_raw_data(tickers, fields, at_time_of):
+def populate_raw_data(tickers, fields):
     quandl_tools.set_api_key()
-
-    global suffix
-    if at_time_of:
-        suffix = "ARQ"  # suffix for numbers at-time-of (as recorded)
-    else:
-        suffix = "MRQ"  # suffix for restated numbers
-
-    # for every ticker in ticker_list get
-    fields_a = map(lambda s: "%s_%s" % (s, suffix), fields)
 
     for ticker in tickers:
         all_fields = None
 
-        for field in fields_a:
+        for field in fields:
 
             query_str = "%s/%s_%s" % (DS_NAME, ticker, field)
             print("fetching data for: {}".format(query_str))
-            df = quandl.get(query_str)
+            df = quandl.get(query_str, start_date=START_DATE, end_date=END_DATE)
 
             #  Change column name to field
             df = df.rename(columns={VAL_COL_NAME: field})
@@ -49,19 +44,25 @@ def populate_raw_data(tickers, fields, at_time_of):
         all_fields.to_csv("{}/{}.csv".format(RAW_FLDR, ticker))
 
 
+def demo():
+    # demo works on free data
+    tickers = ["WMT", "HD", "CSCO"]
+    fields = ["GP", "CAPEX", "EBIT", "ASSETS"]
+    populate_raw_data(tickers, fields)
+
+
+def all_tickers_for_bundle():
+    #tickers = zipline_data_tools.get_tickers_from_bundle('quantopian-quandl')
+    tickers = ["WMT", "HD", "CSCO"]
+    print(tickers[:20])
+    fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
+    populate_raw_data(tickers, fields)
+
 
 if __name__ == '__main__':
 
-    # demo works on free data
-    #tickers = ["WMT", "HD", "CSCO"]
-    #fields = ["GP", "CAPEX", "EBIT", "ASSETS"]
-    #at_time_of = False  # if this is true append "", else append "_MRQ"
-    #populate_raw_data(tickers, fields, at_time_of)
+    #demo()
 
-    tickers = zipline_data_tools.get_tickers_from_bundle('quantopian-quandl')
-    print(tickers[:20])
-
-    fields = ["GP", "CAPEX", "EBIT", "ASSETS"]
-    populate_raw_data(tickers, fields, True)
+    all_tickers_for_bundle()
 
     print("this worked boss")
