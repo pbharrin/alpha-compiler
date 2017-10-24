@@ -26,22 +26,27 @@ def populate_raw_data(tickers, fields):
     for ticker in tickers:
         all_fields = None
 
-        for field in fields:
+        try:
 
-            query_str = "%s/%s_%s" % (DS_NAME, ticker, field)
-            print("fetching data for: {}".format(query_str))
-            df = quandl.get(query_str, start_date=START_DATE, end_date=END_DATE)
+            for field in fields:
 
-            #  Change column name to field
-            df = df.rename(columns={VAL_COL_NAME: field})
+                query_str = "%s/%s_%s" % (DS_NAME, ticker, field)
+                print("fetching data for: {}".format(query_str))
 
-            if all_fields is None:
-                all_fields = df
-            else:
-                all_fields = all_fields.join(df)  # join data of all fields
+                df = quandl.get(query_str, start_date=START_DATE, end_date=END_DATE)
 
-        # write to file: raw/
-        all_fields.to_csv("{}/{}.csv".format(RAW_FLDR, ticker))
+                #  Change column name to field
+                df = df.rename(columns={VAL_COL_NAME: field})
+
+                if all_fields is None:
+                    all_fields = df
+                else:
+                    all_fields = all_fields.join(df)  # join data of all fields
+
+            # write to file: raw/
+            all_fields.to_csv("{}/{}.csv".format(RAW_FLDR, ticker))
+        except quandl.errors.quandl_error.NotFoundError:
+            print("error with ticker: {}".format(ticker))
 
 
 def demo():
@@ -53,7 +58,7 @@ def demo():
 
 def all_tickers_for_bundle():
     #tickers = zipline_data_tools.get_tickers_from_bundle('quantopian-quandl')
-    tickers = ["WMT", "HD", "CSCO"]
+    tickers = ["DOGGY", "WMT", "HD", "CSCO"]
     print(tickers[:20])
     fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
     populate_raw_data(tickers, fields)
