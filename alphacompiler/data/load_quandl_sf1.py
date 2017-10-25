@@ -6,10 +6,11 @@
 
 import quandl
 
-from util import zipline_data_tools
+from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
 from util import quandl_tools
 from logbook import Logger
 import datetime
+from os import listdir
 
 DS_NAME = "SF1"   # quandl DataSet code
 RAW_FLDR = "raw"  # folder to store the raw text file
@@ -21,9 +22,15 @@ END_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
 log = Logger('load_quandl_sf1.py')
 
 def populate_raw_data(tickers, fields):
+    """tickers is a dict with the ticker string as the key and the SID
+    as the value.  """
     quandl_tools.set_api_key()
 
-    for ticker in tickers:
+    existing = listdir(RAW_FLDR)
+
+    for ticker, sid in tickers.items():
+        if "%d.csv" % sid in existing:
+            continue
         all_fields = None
 
         try:
@@ -44,7 +51,7 @@ def populate_raw_data(tickers, fields):
                     all_fields = all_fields.join(df)  # join data of all fields
 
             # write to file: raw/
-            all_fields.to_csv("{}/{}.csv".format(RAW_FLDR, ticker))
+            all_fields.to_csv("{}/{}.csv".format(RAW_FLDR, sid))
         except quandl.errors.quandl_error.NotFoundError:
             print("error with ticker: {}".format(ticker))
 
@@ -57,9 +64,8 @@ def demo():
 
 
 def all_tickers_for_bundle():
-    #tickers = zipline_data_tools.get_tickers_from_bundle('quantopian-quandl')
-    tickers = ["DOGGY", "WMT", "HD", "CSCO"]
-    print(tickers[:20])
+    tickers = get_ticker_sid_dict_from_bundle('quantopian-quandl')
+    #tickers = {"DOGGY":69, "WMT":3173, "HD":2912, "CSCO":2809}
     fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
     populate_raw_data(tickers, fields)
 
