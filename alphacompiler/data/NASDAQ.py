@@ -7,7 +7,6 @@ changes the most recent date's sector will be used.
 Created by Peter Harrington (pbharrin) on 10/25/17.
 """
 from zipline.pipeline.factors import CustomFactor
-import pandas as pd
 import numpy as np
 
 # TODO: make this a paramater
@@ -23,8 +22,4 @@ class NASDAQSectorCodes(CustomFactor):
         self.data = np.load(BASE_PATH + SID_FILE)
 
     def compute(self, today, assets, out):
-        print "assets.shape: ",assets.shape
-        out[:] = np.random.random(assets.shape)
-
-if __name__ == '__main__':
-    print "all done "
+        out[:] = self.data[assets]
