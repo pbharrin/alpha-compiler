@@ -69,6 +69,8 @@ def all_tickers_for_bundle():
     fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
     populate_raw_data(tickers, fields)
 
+    # pack data into np.recarray and save to file
+
 
 if __name__ == '__main__':
 

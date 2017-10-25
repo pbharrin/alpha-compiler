@@ -13,38 +13,18 @@ import pandas as pd
 import numpy as np
 
 
-class RandomFactor(CustomFactor):
-    """Returns a random number, for demo purposes"""
-    inputs = []
-    window_length = 1
-
-    def compute(self, today, assets, out):
-        print "assets.shape: ",assets.shape
-        out[:] = np.random.random(assets.shape)
-
-class RandomFactor2(CustomFactor):
-    """Returns two random numbers, for demo purposes"""
-    inputs = []
-    window_length = 1
-    outputs = ["rand0", "rand1"]
-
-    def compute(self, today, assets, out):
-        # out[:] = np.random.random(assets.shape) # 2 outputs
-        out.rand0 = np.random.random(assets.shape)
-        out.rand1 = np.random.random(assets.shape)
-
-
 # TODO: move this class to its own file, perhaps in util
 class SparseDataFactor(CustomFactor):
     """Abstract Base Class to be used for computing """
     inputs = []
     window_length = 1
-    outputs = ["GP_MRQ", "CAPEX_MRQ"]   # TODO: figure out how to pass this in
+    outputs = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]   # TODO: figure out how to pass this in
 
     def __init__(self, *args, **kwargs):
         self.time_index = None
         self.curr_date = None # date for which time_index is accurate
         self.data = None
+        self.fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
 
     # TODO: move this into the loader, and save the file as a numpy binary
     # using np.save()
@@ -69,22 +49,26 @@ class SparseDataFactor(CustomFactor):
             max_len = max(max_len, df.shape[0])
 
         # pack up data as buffer
-        num_fundamentals = 2          # TODO: get this from the constructor
+        num_fundamentals = len(self.fields)
         buff = np.full((num_fundamentals + 1, self.N, max_len), np.nan)
         # pack self.data as np.recarray
         self.data = np.recarray(shape=(self.N, max_len),
                                 buf=buff,
                                 dtype=[('date', '<f8'),
-                                       ('GP_MRQ', '<f8'),
-                                       ('CAPEX_MRQ', '<f8')])
+                                       ("ROE_ART", '<f8'),
+                                       ("BVPS_ARQ", '<f8'),
+                                       ("SPS_ART", '<f8'),
+                                       ("FCFPS_ARQ", '<f8'),
+                                       ("PRICE", '<f8')])
 
         # iterate over loaded data and populate self.data
         for i, df in enumerate(dfs):
             if df is None:
                 continue
-            self.data.date[i] = df.index
-            self.data['GP_MRQ'][i] = df['GP_MRQ']  # TODO: get these field names from constructor
-            self.data['CAPEX_MRQ'][i] = df['CAPEX_MRQ']
+            ind_len = df.index.shape[0]
+            self.data.date[i, :ind_len] = df.index
+            for field in self.fields:
+                self.data[field][i, :ind_len] = df[field]
 
 
     def bs(self, arr):
@@ -96,10 +80,8 @@ class SparseDataFactor(CustomFactor):
 
         mid = len(arr) / 2
         if self.curr_date < arr[mid]:
-            print "   IT was less than the middle date"
             return self.bs(arr[:mid])
         else:
-            print "   IT was AFTER than the middle date"
             return mid + self.bs(arr[mid:])
 
 
@@ -147,8 +129,10 @@ class SparseDataFactor(CustomFactor):
         if self.curr_date != today:
             self.update_time_index(today, assets, ti_used_today)
 
-        out.GP_MRQ[:] = self.data.GP_MRQ[assets, ti_used_today]
-        out.CAPEX_MRQ[:] = self.data.CAPEX_MRQ[assets, ti_used_today]
+        # ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
+        #out.GP_MRQ[:] = self.data.GP_MRQ[assets, ti_used_today] # original
+        for field in self.fields:
+            out[field][:] = self.data[field][assets, ti_used_today]
 
 
 class Fundamentals(SparseDataFactor):
