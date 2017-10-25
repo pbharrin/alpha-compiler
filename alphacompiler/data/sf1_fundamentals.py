@@ -12,6 +12,7 @@ from os import listdir
 import pandas as pd
 import numpy as np
 
+DATA_PATH = "/Users/peterharrington/Documents/GitHub/alpha-compiler/alphacompiler/data/SF1.npy"
 
 # TODO: move this class to its own file, perhaps in util
 class SparseDataFactor(CustomFactor):
@@ -25,50 +26,6 @@ class SparseDataFactor(CustomFactor):
         self.curr_date = None # date for which time_index is accurate
         self.data = None
         self.fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
-
-    # TODO: move this into the loader, and save the file as a numpy binary
-    # using np.save()
-    def load_data_from_disk(self):
-        """Populate memory (self.data) with data from disk
-        Some of this could be done at the data download time, so the final array
-        is loaded from disk.
-        """
-
-        # create buffer to hold data for all tickers
-        dfs = [None] * self.N
-
-        max_len = -1
-        for fn in listdir(self.raw_path):
-            if not fn.endswith(".csv"):
-                continue
-            df = pd.read_csv(self.raw_path + fn, index_col="Date", parse_dates=True)
-            sid = int(fn.split('.')[0])
-            dfs[sid] = df
-
-            # width is max number of rows in any file
-            max_len = max(max_len, df.shape[0])
-
-        # pack up data as buffer
-        num_fundamentals = len(self.fields)
-        buff = np.full((num_fundamentals + 1, self.N, max_len), np.nan)
-        # pack self.data as np.recarray
-        self.data = np.recarray(shape=(self.N, max_len),
-                                buf=buff,
-                                dtype=[('date', '<f8'),
-                                       ("ROE_ART", '<f8'),
-                                       ("BVPS_ARQ", '<f8'),
-                                       ("SPS_ART", '<f8'),
-                                       ("FCFPS_ARQ", '<f8'),
-                                       ("PRICE", '<f8')])
-
-        # iterate over loaded data and populate self.data
-        for i, df in enumerate(dfs):
-            if df is None:
-                continue
-            ind_len = df.index.shape[0]
-            self.data.date[i, :ind_len] = df.index
-            for field in self.fields:
-                self.data[field][i, :ind_len] = df[field]
 
 
     def bs(self, arr):
@@ -98,7 +55,7 @@ class SparseDataFactor(CustomFactor):
 
     def cold_start(self, today, assets):
         if self.data is None:
-            self.load_data_from_disk()
+            self.data = np.load(DATA_PATH)
 
         # for each sid, do binary search of date array to find current index
         # the results can be shared across all factors that inherit from SparseDataFactor
@@ -107,6 +64,7 @@ class SparseDataFactor(CustomFactor):
         self.curr_date = today.value
         for asset in assets:  # asset is numpy.int64
             self.time_index[asset] = self.bs_sparse_time(asset)
+
 
     def update_time_index(self, today, assets, ti_today):
         """Ratchet update."""
