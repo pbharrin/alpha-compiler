@@ -7,7 +7,7 @@ Zipline's Pipeline.
 """
 
 from zipline.pipeline.factors import CustomFactor
-import numpy as np
+
 from os import listdir
 import pandas as pd
 import numpy as np
@@ -46,6 +46,8 @@ class SparseDataFactor(CustomFactor):
         self.curr_date = None # date for which time_index is accurate
         self.data = None
 
+    # TODO: move this into the loader, and save the file as a numpy binary
+    # using np.save()
     def load_data_from_disk(self):
         """Populate memory (self.data) with data from disk
         Some of this could be done at the data download time, so the final array

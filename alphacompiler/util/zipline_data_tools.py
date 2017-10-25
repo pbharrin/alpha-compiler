@@ -23,9 +23,14 @@ def get_tickers_from_bundle(bundle_name):
     return map(lambda x: (x.symbol, x.sid), all_assets)
 
 
-if __name__ == '__main__':
+def get_ticker_sid_dict_from_bundle(bundle_name):
+    """Packs the (ticker,sid) tuples into a dict."""
     all_equities = get_tickers_from_bundle('quantopian-quandl')
-    ae_d = dict(all_equities)
+    return dict(all_equities)
+
+if __name__ == '__main__':
+
+    ae_d = get_ticker_sid_dict_from_bundle('quantopian-quandl')
     print "max sid: ", max(ae_d.values())
     print "min sid: ", min(ae_d.values())
 
