@@ -50,7 +50,8 @@ class SparseDataFactor(CustomFactor):
 
         # do a binary search of the dates array finding the index
         # where self.curr_date will lie.
-        return self.bs(dates_for_sid) - 1
+        non_nan_dates = dates_for_sid[~np.isnan(dates_for_sid)]
+        return self.bs(non_nan_dates) - 1
 
 
     def cold_start(self, today, assets):
@@ -66,12 +67,12 @@ class SparseDataFactor(CustomFactor):
             self.time_index[asset] = self.bs_sparse_time(asset)
 
 
-    def update_time_index(self, today, assets, ti_today):
+    def update_time_index(self, today, assets):
         """Ratchet update."""
 
         # for each asset check if today >= dates[self.time_index]
         # if so then increment self.time_index[asset.sid] += 1
-        sids_to_increment = today.value >= self.data.date[np.arange(self.N), self.time_index]
+        sids_to_increment = today.value >= self.data.date[np.arange(self.N), self.time_index + 1]
         self.time_index[sids_to_increment] += 1
 
         self.curr_date = today.value
@@ -81,14 +82,11 @@ class SparseDataFactor(CustomFactor):
         # for each asset in assets determine index from date (today)
         if self.time_index is None:
             self.cold_start(today, assets)
+        else:
+            self.update_time_index(today, assets)
 
         ti_used_today = self.time_index[assets]
 
-        if self.curr_date != today:
-            self.update_time_index(today, assets, ti_used_today)
-
-        # ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
-        #out.GP_MRQ[:] = self.data.GP_MRQ[assets, ti_used_today] # original
         for field in self.fields:
             out[field][:] = self.data[field][assets, ti_used_today]
 
