@@ -7,12 +7,12 @@
 import quandl
 
 from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
+from alphacompiler.util.sparse_data import pack_sparse_data
 from util import quandl_tools
 from logbook import Logger
 import datetime
 from os import listdir
-import numpy as np
-import pandas as pd
+
 
 DS_NAME = "SF1"   # quandl DataSet code
 RAW_FLDR = "raw/"  # folder to store the raw text file
@@ -74,55 +74,15 @@ def all_tickers_for_bundle(fields):
 
     populate_raw_data(tickers, fields)
 
-def pack_recarray(N, rawpath, fields, filename):
-    """pack data into np.recarray and persists it to a file."""
-
-
-    # create buffer to hold data for all tickers
-    dfs = [None] * N
-
-    max_len = -1
-    for fn in listdir(rawpath):
-        if not fn.endswith(".csv"):
-            continue
-        df = pd.read_csv(rawpath + fn, index_col="Date", parse_dates=True)
-        sid = int(fn.split('.')[0])
-        dfs[sid] = df
-
-        # width is max number of rows in any file
-        max_len = max(max_len, df.shape[0])
-
-    # pack up data as buffer
-    num_fundamentals = len(fields)
-    buff = np.full((num_fundamentals + 1, N, max_len), np.nan)
-
-    dtypes = [('date', '<f8')]
-    for field in fields:
-        dtypes.append((field, '<f8'))
-
-    # pack self.data as np.recarray
-    data = np.recarray(shape=(N, max_len), buf=buff, dtype=dtypes)
-
-    # iterate over loaded data and populate self.data
-    for i, df in enumerate(dfs):
-        if df is None:
-            continue
-        ind_len = df.index.shape[0]
-        data.date[i, :ind_len] = df.index
-        for field in fields:
-            data[field][i, :ind_len] = df[field]
-
-    data.dump(filename)  # can be read back with np.load()
-
 
 if __name__ == '__main__':
 
     #demo()
     fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
     #all_tickers_for_bundle()
-    pack_recarray(3193,
-                  BASE + RAW_FLDR,
-                  fields,
-                  BASE + FN)
+    pack_sparse_data(3193,
+                     BASE + RAW_FLDR,
+                     fields,
+                     BASE + FN)
 
     print("this worked boss")
