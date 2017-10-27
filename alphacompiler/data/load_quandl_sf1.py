@@ -63,15 +63,14 @@ def populate_raw_data(tickers, fields):
 
 def demo():
     # demo works on free data
-    tickers = ["WMT", "HD", "CSCO"]
+
+    tickers = {"WMT":3173, "HD":2912, "DOGGY":69, "CSCO":2809}
     fields = ["GP", "CAPEX", "EBIT", "ASSETS"]
     populate_raw_data(tickers, fields)
 
 
 def all_tickers_for_bundle(fields):
     tickers = get_ticker_sid_dict_from_bundle('quantopian-quandl')
-    #tickers = {"DOGGY":69, "WMT":3173, "HD":2912, "CSCO":2809}
-
     populate_raw_data(tickers, fields)
 
 
