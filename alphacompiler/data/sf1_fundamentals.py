@@ -58,6 +58,8 @@ class SparseDataFactor(CustomFactor):
         if self.data is None:
             self.data = np.load(DATA_PATH)
 
+        self.M = self.data.date.shape[1]
+
         # for each sid, do binary search of date array to find current index
         # the results can be shared across all factors that inherit from SparseDataFactor
         # this sets an array of ints: time_index
@@ -72,8 +74,12 @@ class SparseDataFactor(CustomFactor):
 
         # for each asset check if today >= dates[self.time_index]
         # if so then increment self.time_index[asset.sid] += 1
-        sids_to_increment = today.value >= self.data.date[np.arange(self.N), self.time_index + 1]
-        self.time_index[sids_to_increment] += 1
+
+        ind_p1 = self.time_index.copy()
+        np.add.at(ind_p1, ind_p1 != (self.M - 1), 1)
+        sids_to_increment = today.value >= self.data.date[np.arange(self.N), ind_p1]
+        sids_not_max = self.time_index != (self.M - 1)   # create mask of non-maxed
+        self.time_index[sids_to_increment & sids_not_max] += 1
 
         self.curr_date = today.value
 
