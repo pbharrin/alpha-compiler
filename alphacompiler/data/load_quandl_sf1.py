@@ -95,15 +95,13 @@ def pack_recarray(N, rawpath, fields, filename):
     # pack up data as buffer
     num_fundamentals = len(fields)
     buff = np.full((num_fundamentals + 1, N, max_len), np.nan)
+
+    dtypes = [('date', '<f8')]
+    for field in fields:
+        dtypes.append((field, '<f8'))
+
     # pack self.data as np.recarray
-    data = np.recarray(shape=(N, max_len),
-                            buf=buff,
-                            dtype=[('date', '<f8'),
-                                   ("ROE_ART", '<f8'),
-                                   ("BVPS_ARQ", '<f8'),
-                                   ("SPS_ART", '<f8'),
-                                   ("FCFPS_ARQ", '<f8'),
-                                   ("PRICE", '<f8')])
+    data = np.recarray(shape=(N, max_len), buf=buff, dtype=dtypes)
 
     # iterate over loaded data and populate self.data
     for i, df in enumerate(dfs):
