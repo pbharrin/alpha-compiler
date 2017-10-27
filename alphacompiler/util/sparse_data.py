@@ -19,6 +19,8 @@ class SparseDataFactor(CustomFactor):
 
     This class must be subclassed with class variable 'outputs' set.  The fields
     in 'outputs' should match those persisted."""
+    inputs = []
+    window_length = 1
 
     def __init__(self, *args, **kwargs):
         self.time_index = None
