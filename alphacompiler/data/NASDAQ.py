@@ -9,6 +9,8 @@ Created by Peter Harrington (pbharrin) on 10/25/17.
 from zipline.pipeline.factors import CustomFactor
 import numpy as np
 
+# TODO: Sharadr also has two types of sector codes: http://www.sharadar.com/meta/tickers.json
+
 # TODO: make this a paramater
 BASE_PATH = "/Users/peterharrington/Documents/GitHub/alpha-compiler/alphacompiler/data/"
 SID_FILE = "NASDAQ_sids.npy"
