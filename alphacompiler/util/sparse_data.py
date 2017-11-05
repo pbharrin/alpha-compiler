@@ -10,6 +10,7 @@ Zipline's Pipeline.
 from zipline.pipeline.factors import CustomFactor
 import numpy as np
 from os import listdir
+import pandas as pd
 
 
 class SparseDataFactor(CustomFactor):
