@@ -8,6 +8,6 @@ setup(name='Alpha Compiler',
       author='Peter Harrington',
       author_email='peter.b.harrington@gmail.com',
       url='https://www.alphacompiler.com/',
-      packages=['alphacompiler', 'alphacompiler.compiler', 
+      packages=['alphacompiler', 
           'alphacompiler.util', 'alphacompiler.data'],
      )
