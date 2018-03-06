@@ -75,7 +75,7 @@ def get_tickers_from_bundle(bundle_name):
 
 def get_ticker_sid_dict_from_bundle(bundle_name):
     """Packs the (ticker,sid) tuples into a dict."""
-    all_equities = get_tickers_from_bundle('quantopian-quandl')
+    all_equities = get_tickers_from_bundle(bundle_name)
     return dict(all_equities)
 
 if __name__ == '__main__':
