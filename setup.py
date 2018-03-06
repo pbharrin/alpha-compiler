@@ -9,5 +9,5 @@ setup(name='Alpha Compiler',
       author_email='peter.b.harrington@gmail.com',
       url='https://www.alphacompiler.com/',
       packages=['alphacompiler', 'alphacompiler.compiler', 
-          'alphacompiler.util', 'alphacompiler.data'],
+          'alphacompiler.util', 'alphacompiler.data', 'alphacompiler.data.loaders'],
      )
