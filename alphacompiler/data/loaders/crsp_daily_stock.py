@@ -13,10 +13,9 @@ import sys
 
 METADATA_HEADERS = ['start_date', 'end_date', 'auto_close_date',
                     'symbol', 'exchange', 'asset_name']
-# UNWANTED_EXCHANGES = set(["OTC", "OTCBB", "INDX"])  # TODO: is this needed?
 
 
-def from_crsp_dump(file_name, dvdend_file=None, start=None, end=None):
+def from_crsp_dump(file_name, start=None, end=None):
     """
     Load data from a CRSP daily stock dump, the following fields are assumed to
     be in the dump: PERMNO,date,TSYMBOL,PRIMEXCH,PERMCO,BIDLO,ASKHI,PRC,VOL,OPENPRC
@@ -52,18 +51,14 @@ def from_crsp_dump(file_name, dvdend_file=None, start=None, end=None):
         df = pd.read_csv(file_name, index_col='date',
                          parse_dates=['date'], na_values=['NA'])
 
-        # drop row with NaNs or the loader will turn all columns to NaNs
-        #df = df.dropna()
-
         uv = df.PERMNO.unique()  # get unique PERMNO (CRSP primary key, doesn't change)
 
-        # counter of valid securites, this will be our primary key
+        # counter of valid securites
         sec_counter = 0
         data_list = []  # list to send to daily_bar_writer
         metadata_list = []  # list to send to asset_db_writer (metadata)
 
         # iterate over all the unique securities (CRSP permno) and pack data,
-        # also pack metadata for writing.
         for permno in uv:
             df_tkr = df[df['PERMNO'] == permno]
 
@@ -97,7 +92,7 @@ def from_crsp_dump(file_name, dvdend_file=None, start=None, end=None):
                                  )
 
             # drop metadata columns
-            df_tkr['close'] = abs(df_tkr['PRC'])  # take abs(close) for esitmated values
+            df_tkr.loc[:, 'close'] = abs(df_tkr['PRC'])  # take abs(close) for esitmated values
 
             df_tkr = df_tkr.drop(['TSYMBOL', 'PERMNO',
                                   'PERMCO', 'PRIMEXCH', 'PRC'], axis=1)
@@ -109,7 +104,7 @@ def from_crsp_dump(file_name, dvdend_file=None, start=None, end=None):
                                             "OPENPRC": "open"})
 
             # pack data to be written by daily_bar_writer
-            data_list.append((sec_counter, df_tkr))  # TODO: use int(PERMNO) for SID
+            data_list.append((int(permno), df_tkr))
             sec_counter += 1
 
         print("writing data for {} securities".format(len(metadata_list)))
@@ -118,23 +113,36 @@ def from_crsp_dump(file_name, dvdend_file=None, start=None, end=None):
         # write metadata
         asset_db_writer.write(equities=pd.DataFrame(metadata_list,
                                                     columns=METADATA_HEADERS))
-        print("a total of {} securities were loaded into this bundle".format(
+        print("**a total of {} securities were loaded into this bundle **".format(
             sec_counter))
+
         # read in Dividend History
-        """
-        m_ticker,ticker,comp_name,comp_name_2,exchange,currency_code,div_ex_date,div_amt,per_end_date
-        Z86Z,0425B,PCA INTL,PCA INTL,,USD,1997-06-09,0.07,1997-07-31
+        # dataframe for dividends and splits
+        dfds = pd.read_csv(file_name, index_col='date',
+                             parse_dates=['date'], na_values=['NA'])
 
-        div_ex_date is the date you are entitled to the dividend
-        """
-        if dvdend_file is None:
-            adjustment_writer.write()
-        else:
-            dfd = pd.read_csv(dvdend_file, index_col='div_ex_date',
-                              parse_dates=['div_ex_date', 'per_end_date'],
-                              na_values=['NA'])
+        # drop rows where FACPR is absent
+        dfds = dfds.dropna()
+        dfds = dfds.drop(["VOL", "ASKHI", "BIDLO", "OPENPRC",
+                              'PERMCO', 'PRIMEXCH', 'PRC'], axis=1)
+        dfds = dfds.rename(columns={'PERMNO': 'sid'})
 
-            # format dfd to have sid
-            adjustment_writer.write(dividends=dfd)
+        # if FACPR == 0, then those are dividend, else it is a split
+        dfd = dfds[dfds["FACPR"] == 0.0]  # dividend
+        dfd.loc[:, 'ex_date'] = dfd.index
+        dfd = dfd.rename(columns={'DCLRDT': 'declared_date',
+                                  'PAYDT': 'pay_date',
+                                  'RCRDDT': 'record_date',
+                                  'DIVAMT': 'amount'})
+        dfd = dfd.drop(['FACPR', 'SHRCD', 'TSYMBOL'], axis=1)
+
+        # move splits into desired format
+        dfs = dfds[dfds["FACPR"] != 0.0]  # splits
+        dfs.loc[:, 'effective_date'] = dfs.index
+        dfs.loc[:, 'ratio'] = 1 + dfs.loc[:,'FACPR']  # TODO: double check this captures reverse splits properly
+        dfs = dfs.drop(['SHRCD', 'TSYMBOL', 'DCLRDT', 'PAYDT', 'RCRDDT', 'DIVAMT', 'FACPR'], axis=1)
+
+        # write
+        adjustment_writer.write(dividends=dfd, splits=dfs)
 
     return ingest
