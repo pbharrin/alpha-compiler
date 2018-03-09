@@ -18,7 +18,7 @@ METADATA_HEADERS = ['start_date', 'end_date', 'auto_close_date',
 def from_crsp_dump(file_name, start=None, end=None):
     """
     Load data from a CRSP daily stock dump, the following fields are assumed to
-    be in the dump: PERMNO,date,TSYMBOL,PRIMEXCH,PERMCO,BIDLO,ASKHI,PRC,VOL,OPENPRC
+    be in the dump: date, PERMCO SHRCD TSYMBOL PRIMEXCH PRC VOL OPENPRC ASKHI BIDLO DIVAMT FACPR DCLRDT RCRDDT PAYDT
     The dump is assumed to reside in a .csv file located at: file_name.
 
     To use this make your ~/.zipline/extension.py look similar this:
@@ -61,6 +61,7 @@ def from_crsp_dump(file_name, start=None, end=None):
         # iterate over all the unique securities (CRSP permno) and pack data,
         for permno in uv:
             df_tkr = df[df['PERMNO'] == permno]
+            df_tkr = df_tkr[~df_tkr.index.duplicated(keep='first')]
 
             row0 = df_tkr.ix[0]  # get metadata from row
 
@@ -70,9 +71,9 @@ def from_crsp_dump(file_name, start=None, end=None):
             print(" preparing {} / {} ".format(row0["TSYMBOL"],
                                                row0["PRIMEXCH"]))
 
-            if row0["TSYMBOL"] is None:
-                print "no ticker please fix"
-                sys.exit()
+            if pd.isnull(row0["TSYMBOL"]):
+                print "no ticker skipping"
+                continue
 
             # check to see if there are missing dates in the middle
             this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]
