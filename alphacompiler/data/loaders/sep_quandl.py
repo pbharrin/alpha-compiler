@@ -61,6 +61,7 @@ def from_sep_dump(file_name, start=None, end=None):
         sec_counter = 0
         data_list = []  # list to send to daily_bar_writer
         metadata_list = []  # list to send to asset_db_writer (metadata)
+        missing_counter = 0
 
         # iterate over all the unique securities and pack data, and metadata
         # for writing
@@ -74,9 +75,10 @@ def from_sep_dump(file_name, start=None, end=None):
             # check to see if there are missing dates in the middle
             this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]
             if len(this_cal) != df_tkr.shape[0]:
-                print "MISSING interstitial dates for: %s please fix" % row0["ticker"]
-                print len(this_cal), df_tkr.shape[0]
-                sys.exit()
+                print "MISSING interstitial dates for: %s using forward fill" % row0["ticker"]
+                df_desired = pd.DataFrame(index=this_cal.tz_localize(None))
+                df_desired = df_desired.join(df_tkr)
+                df_tkr = df_desired.fillna(method='ffill')
 
             # update metadata; 'start_date', 'end_date', 'auto_close_date',
             # 'symbol', 'exchange', 'asset_name'
