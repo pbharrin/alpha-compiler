@@ -119,7 +119,6 @@ def from_sep_dump(file_name, start=None, end=None):
         dfd.loc[:, 'sid'] = dfd.loc[:, 'ticker'].apply(lambda x: ticker2sid_map[x])
         dfd = dfd.rename(columns={'dividends': 'amount'})
         dfd = dfd.drop(['open', 'high', 'low', 'close', 'volume', 'lastupdated', 'ticker'], axis=1)
-        print dfd
 
         # # format dfd to have sid
         adjustment_writer.write(dividends=dfd)
