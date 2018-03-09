@@ -29,6 +29,7 @@ def from_sep_dump(file_name, start=None, end=None):
 
     """
     us_calendar = get_calendar("NYSE").all_sessions
+    ticker2sid_map = {}
 
     def ingest(environ,
                asset_db_writer,
@@ -96,6 +97,7 @@ def from_sep_dump(file_name, start=None, end=None):
 
             # pack data to be written by daily_bar_writer
             data_list.append((sec_counter, df_tkr))
+            ticker2sid_map[tkr] = sec_counter  # record the sid for use later
             sec_counter += 1
 
         print("writing data for {} securities".format(len(metadata_list)))
@@ -107,17 +109,19 @@ def from_sep_dump(file_name, start=None, end=None):
         print("a total of {} securities were loaded into this bundle".format(
             sec_counter))
 
+        # read in Dividend History
+        dfd = pd.read_csv(file_name, index_col='date',
+                         parse_dates=['date'], na_values=['NA'])
+        # drop rows where dividends == 0.0
+        dfd = dfd[dfd["dividends"] != 0.0]
+        dfd.loc[:, 'ex_date'] = dfd.loc[:, 'record_date'] = dfd.index
+        dfd.loc[:, 'declared_date'] = dfd.loc[:, 'pay_date'] = dfd.index
+        dfd.loc[:, 'sid'] = dfd.loc[:, 'ticker'].apply(lambda x: ticker2sid_map[x])
+        dfd = dfd.rename(columns={'dividends': 'amount'})
+        dfd = dfd.drop(['open', 'high', 'low', 'close', 'volume', 'lastupdated', 'ticker'], axis=1)
+        print dfd
 
-        # read in Dividend History # TODO: similar to CRSP
-        adjustment_writer.write()  # TODO: delte this when dividends loaded properly
-
-
-        # dfd = pd.read_csv(dvdend_file, index_col='div_ex_date',
-        #                       parse_dates=['div_ex_date', 'per_end_date'],
-        #                       na_values=['NA'])
-        #
-        # dfd = dfd.ix[START_DATE:]  # drop old data
         # # format dfd to have sid
-        # adjustment_writer.write(dividends=dfd)
+        adjustment_writer.write(dividends=dfd)
 
     return ingest
