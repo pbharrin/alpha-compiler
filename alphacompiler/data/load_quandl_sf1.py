@@ -8,13 +8,13 @@ import quandl
 
 from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
 from alphacompiler.util.sparse_data import pack_sparse_data
-from util import quandl_tools
+from alphacompiler.util import quandl_tools
 from logbook import Logger
 import datetime
 from os import listdir
 
 
-DS_NAME = "SF1"   # quandl DataSet code
+DS_NAME = 'SHARADAR/SF1'   # quandl DataSet code
 RAW_FLDR = "raw/"  # folder to store the raw text file
 VAL_COL_NAME = "Value"
 START_DATE = '2010-01-01'
@@ -23,43 +23,39 @@ END_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
 BASE = "/Users/peterharrington/Documents/GitHub/alpha-compiler/alphacompiler/data/"
 FN = "SF1.npy"
 
-
 log = Logger('load_quandl_sf1.py')
 
-def populate_raw_data(tickers, fields):
+
+def populate_raw_data(tickers, fields, raw_path):
     """tickers is a dict with the ticker string as the key and the SID
     as the value.  """
     quandl_tools.set_api_key()
 
-    existing = listdir(RAW_FLDR)
+    # existing = listdir(RAW_FLDR)
 
     for ticker, sid in tickers.items():
-        if "%d.csv" % sid in existing:
-            continue
-        all_fields = None
-
+        # if "%d.csv" % sid in existing:
+        #     continue
         try:
+            query_str = "%s %s" % (DS_NAME, ticker)
+            print("fetching data for: {}".format(query_str))
 
-            for field in fields:
+            # df = quandl.get_table(query_str, start_date=START_DATE, end_date=END_DATE)
+            df = quandl.get_table(DS_NAME,
+                                  calendardate={'gte': START_DATE, 'lte': END_DATE},
+                                  ticker=ticker,
+                                  qopts={'columns': ['dimension', 'datekey'] + fields})
 
-                query_str = "%s/%s_%s" % (DS_NAME, ticker, field)
-                print("fetching data for: {}".format(query_str))
+            df = df[df.dimension == "ARQ"]  # only use As-Reported numbers
 
-                df = quandl.get(query_str, start_date=START_DATE, end_date=END_DATE)
+            #  Change column name to field
+            df = df.rename(columns={"datekey": "Date"})
+            df = df.drop(["dimension"], axis=1)
 
-                #  Change column name to field
-                df = df.rename(columns={VAL_COL_NAME: field})
-
-                if all_fields is None:
-                    all_fields = df
-                else:
-                    all_fields = all_fields.join(df)  # join data of all fields
-
-            # write to file: raw/
-            all_fields.to_csv("{}/{}.csv".format(RAW_FLDR, sid))
+            # write raw file: raw/
+            df.to_csv("{}/{}.csv".format(raw_path, sid))
         except quandl.errors.quandl_error.NotFoundError:
             print("error with ticker: {}".format(ticker))
-
 
 def demo():
     # demo works on free data
@@ -69,19 +65,20 @@ def demo():
     populate_raw_data(tickers, fields)
 
 
-def all_tickers_for_bundle(fields):
-    tickers = get_ticker_sid_dict_from_bundle('quantopian-quandl')
-    populate_raw_data(tickers, fields)
+def all_tickers_for_bundle(fields, bundle_name, raw_path=RAW_FLDR):
+    tickers = get_ticker_sid_dict_from_bundle(bundle_name)
+    populate_raw_data(tickers, fields, raw_path)
 
 
 if __name__ == '__main__':
 
     #demo()
-    fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
-    #all_tickers_for_bundle()
-    pack_sparse_data(3193,
-                     BASE + RAW_FLDR,
-                     fields,
-                     BASE + FN)
+    #fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
+    fields = ["marketcap", "pb"]
+    all_tickers_for_bundle(fields, 'quantopian-quandl')
+    pack_sparse_data(3196,  # number of tickers in buldle + 1
+                    BASE + RAW_FLDR,
+                    fields,
+                    BASE + FN)
 
     print("this worked boss")
