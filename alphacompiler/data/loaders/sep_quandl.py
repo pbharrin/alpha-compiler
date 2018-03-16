@@ -51,7 +51,7 @@ def from_sep_dump(file_name, start=None, end=None):
                          parse_dates=['date'], na_values=['NA'])
 
         # drop unused columns, dividends will be used later
-        df = df.drop(['lastupdated', 'dividends'], axis=1)
+        df = df.drop(['lastupdated', 'dividends', 'closeunadj'], axis=1)
 
         # drop row with NaNs or the loader will turn all columns to NaNs
         # df = df.dropna()
@@ -118,7 +118,7 @@ def from_sep_dump(file_name, start=None, end=None):
         dfd.loc[:, 'declared_date'] = dfd.loc[:, 'pay_date'] = dfd.index
         dfd.loc[:, 'sid'] = dfd.loc[:, 'ticker'].apply(lambda x: ticker2sid_map[x])
         dfd = dfd.rename(columns={'dividends': 'amount'})
-        dfd = dfd.drop(['open', 'high', 'low', 'close', 'volume', 'lastupdated', 'ticker'], axis=1)
+        dfd = dfd.drop(['open', 'high', 'low', 'close', 'volume', 'lastupdated', 'ticker', 'closeunadj'], axis=1)
 
         # # format dfd to have sid
         adjustment_writer.write(dividends=dfd)
