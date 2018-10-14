@@ -12,15 +12,17 @@ from alphacompiler.util import quandl_tools
 from logbook import Logger
 import datetime
 from os import listdir
+import os
 
 
+BASE = os.path.dirname(os.path.realpath(__file__))
 DS_NAME = 'SHARADAR/SF1'   # quandl DataSet code
-RAW_FLDR = "raw/"  # folder to store the raw text file
+RAW_FLDR = "raw"  # folder to store the raw text file
 VAL_COL_NAME = "Value"
-START_DATE = '2010-01-01'
+START_DATE = '2013-01-01'
 END_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
 
-BASE = "/Users/peterharrington/Documents/GitHub/alpha-compiler/alphacompiler/data/"
+
 FN = "SF1.npy"
 
 log = Logger('load_quandl_sf1.py')
@@ -53,7 +55,7 @@ def populate_raw_data(tickers, fields, raw_path):
             df = df.drop(["dimension"], axis=1)
 
             # write raw file: raw/
-            df.to_csv("{}/{}.csv".format(raw_path, sid))
+            df.to_csv(os.path.join(raw_path,"{}.csv".format(sid)))
         except quandl.errors.quandl_error.NotFoundError:
             print("error with ticker: {}".format(ticker))
 
@@ -65,20 +67,21 @@ def demo():
     populate_raw_data(tickers, fields)
 
 
-def all_tickers_for_bundle(fields, bundle_name, raw_path=RAW_FLDR):
+def all_tickers_for_bundle(fields, bundle_name, raw_path=os.path.join(BASE,RAW_FLDR)):
     tickers = get_ticker_sid_dict_from_bundle(bundle_name)
-    populate_raw_data(tickers, fields, raw_path)
-
+    populate_raw_data({"WMT":3173, "HD":2912, "DOGGY":69, "CSCO":2809}, fields, raw_path)
+    #populate_raw_data(tickers, fields, raw_path)
+    return len(tickers)
 
 if __name__ == '__main__':
 
     #demo()
     #fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
-    fields = ["marketcap", "pb"]
-    all_tickers_for_bundle(fields, 'quantopian-quandl')
-    pack_sparse_data(3196,  # number of tickers in buldle + 1
-                    BASE + RAW_FLDR,
+    fields = ["marketcap", "pb", "roe"]
+    num_tickers = all_tickers_for_bundle(fields, 'quantopian-quandl')
+    pack_sparse_data(num_tickers + 1,  # number of tickers in buldle + 1
+                    os.path.join(BASE,RAW_FLDR),
                     fields,
-                    BASE + FN)
+                    os.path.join(BASE,FN))
 
     print("this worked boss")

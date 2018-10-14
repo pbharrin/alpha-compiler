@@ -7,12 +7,15 @@ The download also provides industries within sectors.
 """
 import numpy as np
 import pandas as pd
+import sys
 from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
+import os
+import requests
 
 # this gets all the data for the three exchanges 6000+ tickers
 BASE_URL = "http://www.nasdaq.com/screening/companies-by-industry.aspx?&render=download"
 
-BASE_PATH = "/Users/peterharrington/Documents/GitHub/alpha-compiler/alphacompiler/data/"
+BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 RAW_FILE = "NASDAQ_table.csv"
 SID_FILE = "NASDAQ_sids.npy"  # persisted np.array where
 
@@ -50,10 +53,13 @@ def create_sid_table_from_file(filepath):
     for ticker, sid in ae_d.items():
         sectors[sid] = coded_sectors_for_ticker.get(ticker, -1)
 
-    np.save(BASE_PATH + SID_FILE, sectors)
+    np.save(os.path.join(BASE_PATH , SID_FILE), sectors)
 
 
 
 if __name__ == '__main__':
-    create_sid_table_from_file(BASE_PATH + RAW_FILE)
+    INPUT_FILE = os.path.join(BASE_PATH , RAW_FILE)
+    r = requests.get(BASE_URL, allow_redirects=True)
+    open(INPUT_FILE, 'wb').write(r.content)
+    create_sid_table_from_file(INPUT_FILE)
     print("all done boss")
