@@ -69,15 +69,15 @@ def demo():
 
 def all_tickers_for_bundle(fields, bundle_name, raw_path=os.path.join(BASE,RAW_FLDR)):
     tickers = get_ticker_sid_dict_from_bundle(bundle_name)
-    populate_raw_data({"WMT":3173, "HD":2912, "DOGGY":69, "CSCO":2809}, fields, raw_path)
-    #populate_raw_data(tickers, fields, raw_path)
+    #populate_raw_data({"WMT":3173, "HD":2912, "DOGGY":69, "CSCO":2809}, fields, raw_path)
+    populate_raw_data(tickers, fields, raw_path)
     return len(tickers)
 
 if __name__ == '__main__':
 
     #demo()
     #fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
-    fields = ["marketcap", "pb", "roe"]
+    fields = ["marketcap", "pb"]
     num_tickers = all_tickers_for_bundle(fields, 'quantopian-quandl')
     pack_sparse_data(num_tickers + 1,  # number of tickers in buldle + 1
                     os.path.join(BASE,RAW_FLDR),
