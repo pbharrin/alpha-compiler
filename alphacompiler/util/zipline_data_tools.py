@@ -81,9 +81,9 @@ def get_ticker_sid_dict_from_bundle(bundle_name):
 if __name__ == '__main__':
 
     ae_d = get_ticker_sid_dict_from_bundle('quantopian-quandl')
-    print "max sid: ", max(ae_d.values())
-    print "min sid: ", min(ae_d.values())
+    print("max sid: ", max(ae_d.values()))
+    print("min sid: ", min(ae_d.values()))
 
-    print "WMT sid:",ae_d["WMT"]
-    print "HD sid:",ae_d["HD"]
-    print "CSCO sid:",ae_d["CSCO"]
+    print("WMT sid:",ae_d["WMT"])
+    print("HD sid:",ae_d["HD"])
+    print("CSCO sid:",ae_d["CSCO"])

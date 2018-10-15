@@ -11,7 +11,7 @@ from zipline.pipeline.factors import CustomFactor
 import numpy as np
 from os import listdir
 import pandas as pd
-
+import os
 
 class SparseDataFactor(CustomFactor):
     """Abstract Base Class to be used for computing sparse data.
@@ -37,7 +37,7 @@ class SparseDataFactor(CustomFactor):
                 return 0
             else: return 1
 
-        mid = len(arr) / 2
+        mid = int(len(arr) / 2)
         if self.curr_date < arr[mid]:
             return self.bs(arr[:mid])
         else:
@@ -101,7 +101,7 @@ class SparseDataFactor(CustomFactor):
 
 
 def pack_sparse_data(N, rawpath, fields, filename):
-    """pack data into np.recarray and persists it to a file to
+    """pack data into np.recarray and persists it to a file to be
     used by SparseDataFactor"""
 
 
@@ -112,12 +112,15 @@ def pack_sparse_data(N, rawpath, fields, filename):
     for fn in listdir(rawpath):
         if not fn.endswith(".csv"):
             continue
-        df = pd.read_csv(rawpath + fn, index_col="Date", parse_dates=True)
+        df = pd.read_csv(os.path.join(rawpath,fn), index_col="Date", parse_dates=True)
         sid = int(fn.split('.')[0])
         dfs[sid] = df
 
         # width is max number of rows in any file
         max_len = max(max_len, df.shape[0])
+
+    # TODO: temp workaround for `Array Index Out of Bound` bug
+    max_len = max_len + 1
 
     # pack up data as buffer
     num_fundamentals = len(fields)
