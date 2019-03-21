@@ -77,7 +77,7 @@ def from_sep_dump(file_name, start=None, end=None):
         # for writing
         for tkr in uv:
             df_tkr = df[df['ticker'] == tkr]
-            df_tkr = df_tkr.sort()
+            df_tkr = df_tkr.sort_index()
 
             row0 = df_tkr.ix[0]  # get metadata from row
 
