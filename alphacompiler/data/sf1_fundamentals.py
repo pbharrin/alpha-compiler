@@ -11,4 +11,5 @@ class Fundamentals(SparseDataFactor):
     def __init__(self, *args, **kwargs):
         super(Fundamentals, self).__init__(*args, **kwargs)
         self.N = len(get_ticker_sid_dict_from_bundle("quantopian-quandl")) + 1  # max(sid)+1 get this from the bundle
+
         self.data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "SF1.npy")
