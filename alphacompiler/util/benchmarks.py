@@ -17,7 +17,6 @@ def ensure_benchmark_data_from_file():
     Loads a file of benchmark data and calculates returns.
     :return: pd.Series of returns
     """
-    print("***********  %%%%%%%   &&&&&&&  opening a file")
     df = pd.read_csv(BENCHMARK_DATA_FILE)
     df.index = pd.DatetimeIndex(df['date'])
     df = df.sort_index().tz_localize('UTC')
