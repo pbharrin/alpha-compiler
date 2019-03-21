@@ -114,6 +114,7 @@ def pack_sparse_data(N, rawpath, fields, filename):
             continue
         df = pd.read_csv(rawpath + fn, index_col="Date", parse_dates=True)
         sid = int(fn.split('.')[0])
+        print("packing sid: %d" % sid)
         dfs[sid] = df
 
         # width is max number of rows in any file

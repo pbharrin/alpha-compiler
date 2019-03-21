@@ -14,6 +14,15 @@ METADATA_HEADERS = ['start_date', 'end_date', 'auto_close_date',
                     'symbol', 'exchange', 'asset_name']
 
 
+def check_for_abnormal_returns(df, thresh=3.0):
+    """Checks to see if any days have abnormal returns"""
+    returns = df['close'].pct_change()
+    abnormal_rets = returns[returns > thresh]
+    if abnormal_rets.shape[0] > 0:
+        sys.stderr.write('Abnormal returns for: {}\n'.format(df.ix[0]['ticker']))
+        sys.stderr.write('{}\n'.format(str(abnormal_rets)))
+
+
 def from_sep_dump(file_name, start=None, end=None):
     """
     ticker,date,open,high,low,close,volume,dividends,lastupdated
@@ -68,15 +77,18 @@ def from_sep_dump(file_name, start=None, end=None):
         # for writing
         for tkr in uv:
             df_tkr = df[df['ticker'] == tkr]
+            df_tkr = df_tkr.sort()
 
             row0 = df_tkr.ix[0]  # get metadata from row
 
             print(" preparing {}".format(row0["ticker"]))
+            check_for_abnormal_returns(df_tkr)
 
             # check to see if there are missing dates in the middle
             this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]
             if len(this_cal) != df_tkr.shape[0]:
                 print "MISSING interstitial dates for: %s using forward fill" % row0["ticker"]
+                print 'number of dates missing: {}'.format(len(this_cal) - df_tkr.shape[0])
                 df_desired = pd.DataFrame(index=this_cal.tz_localize(None))
                 df_desired = df_desired.join(df_tkr)
                 df_tkr = df_desired.fillna(method='ffill')
@@ -114,6 +126,8 @@ def from_sep_dump(file_name, start=None, end=None):
                          parse_dates=['date'], na_values=['NA'])
         # drop rows where dividends == 0.0
         dfd = dfd[dfd["dividends"] != 0.0]
+        dfd = dfd.dropna()
+
         dfd.loc[:, 'ex_date'] = dfd.loc[:, 'record_date'] = dfd.index
         dfd.loc[:, 'declared_date'] = dfd.loc[:, 'pay_date'] = dfd.index
         dfd.loc[:, 'sid'] = dfd.loc[:, 'ticker'].apply(lambda x: ticker2sid_map[x])

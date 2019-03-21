@@ -14,6 +14,8 @@ import datetime
 from os import listdir
 
 
+
+
 DS_NAME = 'SHARADAR/SF1'   # quandl DataSet code
 RAW_FLDR = "raw/"  # folder to store the raw text file
 VAL_COL_NAME = "Value"
@@ -69,16 +71,27 @@ def all_tickers_for_bundle(fields, bundle_name, raw_path=RAW_FLDR):
     tickers = get_ticker_sid_dict_from_bundle(bundle_name)
     populate_raw_data(tickers, fields, raw_path)
 
+def num_tkrs_in_bundle(bundle_name):
+    return len(get_ticker_sid_dict_from_bundle(bundle_name))
+
 
 if __name__ == '__main__':
 
     #demo()
     #fields = ["ROE_ART", "BVPS_ARQ", "SPS_ART", "FCFPS_ARQ", "PRICE"]
+    
+    from zipline.data.bundles.core import register
+    from alphacompiler.data.loaders.sep_quandl import from_sep_dump
+    BUNDLE_NAME = 'sep-picsuniverse'
+    register(BUNDLE_NAME, from_sep_dump('.'), )
+    print num_tkrs_in_bundle(BUNDLE_NAME)
+
+    """
     fields = ["marketcap", "pb"]
     all_tickers_for_bundle(fields, 'quantopian-quandl')
     pack_sparse_data(3196,  # number of tickers in buldle + 1
                     BASE + RAW_FLDR,
                     fields,
                     BASE + FN)
-
+    """
     print("this worked boss")
