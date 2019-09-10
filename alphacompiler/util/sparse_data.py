@@ -113,6 +113,7 @@ def pack_sparse_data(N, rawpath, fields, filename):
         if not fn.endswith(".csv"):
             continue
         df = pd.read_csv(os.path.join(rawpath,fn), index_col="Date", parse_dates=True)
+        df = df.sort_index()
         sid = int(fn.split('.')[0])
         print("packing sid: %d" % sid)
         dfs[sid] = df
