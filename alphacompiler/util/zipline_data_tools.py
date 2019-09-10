@@ -8,6 +8,8 @@ import os
 from zipline.data.bundles.core import load
 import numpy as np
 from zipline.utils.math_utils import nanmean, nanstd
+from zipline.pipeline import SimplePipelineEngine, USEquityPricingLoader
+from zipline.pipeline.data import USEquityPricing
 
 
 def fast_cov(m0, m1):
@@ -78,6 +80,29 @@ def get_ticker_sid_dict_from_bundle(bundle_name):
     """Packs the (ticker,sid) tuples into a dict."""
     all_equities = get_tickers_from_bundle(bundle_name)
     return dict(all_equities)
+
+
+def make_pipeline_engine(bundle, data_dates):
+    """Creates a pipeline engine for the dates in data_dates.
+    Using this allows usage very similar to run_pipeline in Quantopian's env."""
+
+    bundle_data = load(bundle, os.environ, None)
+
+    pipeline_loader = USEquityPricingLoader(bundle_data.equity_daily_bar_reader, bundle_data.adjustment_reader)
+
+    def choose_loader(column):
+        if column in USEquityPricing.columns:
+            return pipeline_loader
+        raise ValueError("No PipelineLoader registered for column %s." % column)
+
+    # set up pipeline
+    cal = bundle_data.equity_daily_bar_reader.trading_calendar.all_sessions
+    cal2 = cal[(cal >= data_dates[0]) & (cal <= data_dates[1])]
+
+    spe = SimplePipelineEngine(get_loader=choose_loader,
+                               calendar=cal2,
+                               asset_finder=bundle_data.asset_finder)
+    return spe
 
 
 if __name__ == '__main__':
