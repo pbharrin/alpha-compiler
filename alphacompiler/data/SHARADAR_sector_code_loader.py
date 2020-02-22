@@ -13,11 +13,12 @@ import numpy as np
 from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
 from zipline.data.bundles.core import register
 
-TICKER_FILE = '/Users/peterharrington/Downloads/SHARADAR_TICKERS_fc1f55188fbc034eadec5932a08d626f.csv'
+TICKER_FILE = '/Users/peterharrington/Downloads/SHARADAR-TICKERS.csv'
 BUNDLE_NAME = 'sep'
 
 ZIPLINE_DATA_DIR = '/Users/peterharrington/.zipline/data/'  # TODO: get this from Zipline api
-SID_FILE = "SHARDAR_sectors.npy"  # persisted np.array where
+SID_FILE = "SHARDAR_sectors.npy"  # persisted np.array
+STATIC_FILE = "SHARDAR_static.npy"  # persisted np.array
 
 
 SECTOR_CODING = {'Technology': 0,
@@ -32,6 +33,21 @@ SECTOR_CODING = {'Technology': 0,
                  'Real Estate': 9,
                  'Communication Services': 10,
                  np.nan: -1}  # a few tickers are missing sectors, these should be ignored
+
+EXCHANGE_CODING = {'NYSE': 0,
+                   'NASDAQ': 1,
+                   'NYSEMKT': 2,
+                   'OTC': 3,
+                   'NYSEARCA': 4,
+                   'BATS': 5}
+
+CATEGORY_CODING = {'Domestic': 0,
+                   'ADR': 1,
+                   'Canadian': 2,
+                   'Domestic Primary': 3,
+                   'ADR Primary': 4,
+                   'Canadian Primary': 5}
+
 
 def create_sid_table_from_file(filepath):
     """reads the raw file, maps tickers -> SIDS,
@@ -58,6 +74,41 @@ def create_sid_table_from_file(filepath):
     np.save(ZIPLINE_DATA_DIR + SID_FILE, sectors)
 
 
+def create_static_table_from_file(filepath):
+    """Stores static items to a persisted np array.
+    The following static fields are currently persisted.
+    -Sector
+    -
+    """
+    register(BUNDLE_NAME, int, )
+
+    df = pd.read_csv(filepath, index_col="ticker")
+
+    coded_sectors_for_ticker = df['sector'].map(SECTOR_CODING)
+    coded_exchange_for_ticker = df['exchange'].map(EXCHANGE_CODING)
+    coded_category_for_ticker = df['category'].map(CATEGORY_CODING)
+
+    ae_d = get_ticker_sid_dict_from_bundle(BUNDLE_NAME)
+    N = max(ae_d.values()) + 1
+
+    # create 2-D array to hold data where index = SID
+    sectors = np.full((3, N), -1, np.dtype('int64'))
+    # sectors = np.full(N, -1, np.dtype('int64'))
+
+    # iterate over Assets in the bundle, and fill in static fields
+    for ticker, sid in ae_d.items():
+        sectors[0, sid] = coded_sectors_for_ticker.get(ticker, -1)
+        sectors[1, sid] = coded_exchange_for_ticker.get(ticker, -1)
+        sectors[2, sid] = coded_category_for_ticker.get(ticker, -1)
+
+    print(sectors)
+    print(sectors[:, -10:])
+
+    # finally save the file to disk
+    np.save(ZIPLINE_DATA_DIR + STATIC_FILE, sectors)
+
+
 if __name__ == '__main__':
 
-    create_sid_table_from_file(TICKER_FILE)
+    create_static_table_from_file(TICKER_FILE)
+    # create_sid_table_from_file(TICKER_FILE)  # only SID sectors

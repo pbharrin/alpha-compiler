@@ -20,10 +20,10 @@ BASE = os.path.dirname(os.path.realpath(__file__))
 DS_NAME = 'SHARADAR/SF1'   # quandl DataSet code
 RAW_FLDR = "raw"  # folder to store the raw text file
 VAL_COL_NAME = "Value"
-START_DATE = '2013-01-01'
+START_DATE = '2009-01-01'
 END_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
 
-
+ZIPLINE_DATA_DIR = '/Users/peterharrington/.zipline/data/'  # TODO: get this from Zipline api
 FN = "SF1.npy"
 
 log = Logger('load_quandl_sf1.py')
@@ -127,10 +127,15 @@ if __name__ == '__main__':
     dimensions0 = ['ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
 
     # magic formula
-    fields1 = ['ebit', 'workingcapital', 'assets', 'assetsc', 'intangibles', 'ev', 'marketcap']
-    dimensions1 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
-    fields = fields0 + fields1
-    dimensions = dimensions0 + dimensions1
+    # fields1 = ['ebit', 'workingcapital', 'assets', 'assetsc', 'intangibles', 'ev', 'marketcap']
+    # dimensions1 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
+
+    # Marc's turntup
+    fields2 = ['roe', 'marketcap', 'de', 'debt', 'debtnc']
+    dimensions2 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
+
+    fields = fields0 + fields2
+    dimensions = dimensions0 + dimensions2
 
     from zipline.data.bundles.core import register
     from alphacompiler.data.loaders.sep_quandl import from_sep_dump
@@ -140,11 +145,11 @@ if __name__ == '__main__':
     num_tickers = num_tkrs_in_bundle(BUNDLE_NAME)
     print('number of tickers: ', num_tickers)
 
-    # all_tickers_for_bundle(fields, dimensions, 'sep')
+    # all_tickers_for_bundle(fields, dimensions, 'sep')  # downloads the data to /raw
     pack_sparse_data(num_tickers + 1,  # number of tickers in buldle + 1
                     os.path.join(BASE, RAW_FLDR),
                     fields,
-                    os.path.join(BASE, FN))
+                    ZIPLINE_DATA_DIR + FN)  # write directly to the zipline data dir
 
 
     print("this worked boss")
