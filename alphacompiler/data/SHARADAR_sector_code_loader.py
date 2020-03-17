@@ -72,6 +72,7 @@ def create_sid_table_from_file(filepath):
     assert df.shape[0] > 10001  # there should be more than 10k tickers
     df = df[df.exchange != 'None']
     df = df[df.exchange != 'INDEX']
+    df = df[df.table == 'SEP']
 
     coded_sectors_for_ticker = df["sector"].map(SECTOR_CODING)
 
@@ -83,7 +84,9 @@ def create_sid_table_from_file(filepath):
 
     # iterate over Assets in the bundle, and fill in sectors
     for ticker, sid in ae_d.items():
-        sectors[sid] = coded_sectors_for_ticker.get(ticker, -1)
+        sector_coded = coded_sectors_for_ticker.get(ticker, -1)
+        print(ticker, sid, sector_coded, '<-end')
+        sectors[sid] = sector_coded
     print(sectors)
 
     # finally save the file to disk
@@ -132,5 +135,5 @@ def create_static_table_from_file(filepath):
 
 if __name__ == '__main__':
 
-    create_static_table_from_file(TICKER_FILE)
-    # create_sid_table_from_file(TICKER_FILE)  # only SID sectors
+    # create_static_table_from_file(TICKER_FILE)
+    create_sid_table_from_file(TICKER_FILE)  # only SID sectors

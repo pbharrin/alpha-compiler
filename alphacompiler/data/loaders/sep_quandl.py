@@ -75,8 +75,9 @@ def from_sep_dump(file_name, start=None, end=None):
 
         # iterate over all the unique securities and pack data, and metadata
         # for writing
-        for tkr in uv:
-            df_tkr = df[df['ticker'] == tkr]
+        for tkr, df_tkr in df.groupby('ticker'):
+        # for tkr in uv:
+        #     df_tkr = df[df['ticker'] == tkr]
             df_tkr = df_tkr.sort_index()
 
             row0 = df_tkr.ix[0]  # get metadata from row
