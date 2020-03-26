@@ -85,7 +85,7 @@ def create_sid_table_from_file(filepath):
     # iterate over Assets in the bundle, and fill in sectors
     for ticker, sid in ae_d.items():
         sector_coded = coded_sectors_for_ticker.get(ticker, -1)
-        print(ticker, sid, sector_coded, '<-end')
+        print(ticker, sid, sector_coded)
         sectors[sid] = sector_coded
     print(sectors)
 
@@ -126,6 +126,7 @@ def create_static_table_from_file(filepath):
         sectors[1, sid] = coded_exchange_for_ticker.get(ticker, -1)
         sectors[2, sid] = coded_category_for_ticker.get(ticker, -1)
 
+
     print(sectors)
     print(sectors[:, -10:])
 
@@ -135,5 +136,5 @@ def create_static_table_from_file(filepath):
 
 if __name__ == '__main__':
 
-    # create_static_table_from_file(TICKER_FILE)
+    create_static_table_from_file(TICKER_FILE)
     create_sid_table_from_file(TICKER_FILE)  # only SID sectors

@@ -130,12 +130,12 @@ if __name__ == '__main__':
     # fields1 = ['ebit', 'workingcapital', 'assets', 'assetsc', 'intangibles', 'ev', 'marketcap']
     # dimensions1 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
 
-    # Marc's turntup
+    # Marc's turntup Quality companies in an uptrend
     fields2 = ['roe', 'marketcap', 'de', 'debt', 'debtnc']
     dimensions2 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
 
-    fields = fields0 + fields2
-    dimensions = dimensions0 + dimensions2
+    fields = fields0 #+ fields2
+    dimensions = dimensions0 #+ dimensions2
 
     from zipline.data.bundles.core import register
     from alphacompiler.data.loaders.sep_quandl import from_sep_dump
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     num_tickers = num_tkrs_in_bundle(BUNDLE_NAME)
     print('number of tickers: ', num_tickers)
 
-    # all_tickers_for_bundle(fields, dimensions, 'sep')  # downloads the data to /raw
+    all_tickers_for_bundle(fields, dimensions, 'sep')  # downloads the data to /raw
     pack_sparse_data(num_tickers + 1,  # number of tickers in buldle + 1
                     os.path.join(BASE, RAW_FLDR),
                     fields,
