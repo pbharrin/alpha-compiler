@@ -84,7 +84,7 @@ def get_all_assets_for_bundle(bundle_name):
     lifetimes = bundle_data.asset_finder._compute_asset_lifetimes()
     all_sids = lifetimes.sid
 
-    print 'all_sids: ', all_sids
+    print('all_sids: ', all_sids)
 
     # retreive all assets in the bundle
     return bundle_data.asset_finder.retrieve_all(sids=all_sids)

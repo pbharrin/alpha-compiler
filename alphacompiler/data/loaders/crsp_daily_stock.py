@@ -71,7 +71,7 @@ def from_crsp_dump(file_name, start=None, end=None):
         skipped_permnos = []
 
         # iterate over all the unique securities (CRSP permno) and pack data,
-        for permno in uv:
+        for permno in uv:  # TODO: See sep data loader for a faster way of doing this.
             df_tkr = df[df['PERMNO'] == permno]
             df_tkr = df_tkr[~df_tkr.index.duplicated(keep='first')]
 
@@ -111,7 +111,7 @@ def from_crsp_dump(file_name, start=None, end=None):
                                                row0["PRIMEXCH"]))
 
             if HURRICANE_SANDY_ER in df_tkr.index:
-                print 'contains HURRICANE Sandy'
+                print('contains HURRICANE Sandy')
                 # copy dividend dates
                 df_tkr.loc[HURRICANE_SANDY_FD, DIV_COLUMNS] = df_tkr.loc[HURRICANE_SANDY_ER, DIV_COLUMNS].values
                 # delete extra day
@@ -121,22 +121,22 @@ def from_crsp_dump(file_name, start=None, end=None):
             this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]
 
             if df_tkr.shape[0]/float(len(this_cal)) < ALLOWED_MISSING_DATES_RATIO:
-                print 'too many missing dates, skipping ticker'
+                print('too many missing dates, skipping ticker')
                 skipped_permnos.append(permno)
                 continue
 
             if len(this_cal) != df_tkr.shape[0]:
-                print len(this_cal), df_tkr.shape[0]  # the ticker has more rows than the calendar (traded on non-trading day?)
+                print(len(this_cal), df_tkr.shape[0])  # the ticker has more rows than the calendar (traded on non-trading day?)
                 emptyDF = pd.DataFrame(index=this_cal)
                 emptyDF.index.tz = None
-                print "MISSING interstitial dates for: %s please fix" % row0["TSYMBOL"]
-                print df_tkr.join(emptyDF, how='outer')
+                print("MISSING interstitial dates for: %s please fix" % row0["TSYMBOL"])
+                print(df_tkr.join(emptyDF, how='outer'))
                 missing_dates = set(emptyDF.index) - set(df_tkr.index)
-                print "dates missing: ", missing_dates
+                print("dates missing: ", missing_dates)
 
                 # detect delisting pattern and fix
                 if set(emptyDF.index[-(len(missing_dates) + 1):-1]) == missing_dates:
-                    print "all missing dates lead to end, dropping last two rows"
+                    print("all missing dates lead to end, dropping last two rows")
                     # delete last two rows of df_tkr
                     df_tkr = df_tkr.drop(df_tkr.index[-2:])
                 else:
@@ -233,7 +233,7 @@ def from_crsp_dump(file_name, start=None, end=None):
         dfs.loc[:, 'ratio'] = 1.0 / (1 + dfs.loc[:,'FACPR'])
 
         print('extreme split values')
-        print dfs[(dfs['ratio'] > 100) | (dfs['ratio'] < 0.01)]
+        print(dfs[(dfs['ratio'] > 100) | (dfs['ratio'] < 0.01)])
 
         dfs = dfs.drop(['TSYMBOL', 'DCLRDT', 'PAYDT', 'RCRDDT', 'DIVAMT', 'FACPR'], axis=1)
 
