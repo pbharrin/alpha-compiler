@@ -9,27 +9,68 @@ import quandl
 from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
 from alphacompiler.util.sparse_data import pack_sparse_data
 from alphacompiler.util import quandl_tools
+import alphacompiler.util.load_extensions  # this simply loads the extensions
+
 from logbook import Logger
 import datetime
-from os import listdir
 import os
 import pandas as pd
-
 
 BASE = os.path.dirname(os.path.realpath(__file__))
 DS_NAME = 'SHARADAR/SF1'   # quandl DataSet code
 RAW_FLDR = "raw"  # folder to store the raw text file
-VAL_COL_NAME = "Value"
-START_DATE = '2009-01-01'
+START_DATE = '2009-01-01'  # this is only used for getting data from the API
 END_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
 
 ZIPLINE_DATA_DIR = '/Users/peterharrington/.zipline/data/'  # TODO: get this from Zipline api
-FN = "SF1.npy"
+FN = "SF1.npy"  # the file name to be used when storing this in ~/.zipline/data
+
+DUMP_FILE = '/Users/peterharrington/Downloads/SHARADAR_SF1_2daa4baaad2a300c166b5c0f7e546bd1.csv'
 
 log = Logger('load_quandl_sf1.py')
 
 
-def populate_raw_data(tickers, fields, dimensions, raw_path):
+
+def populate_raw_data_from_dump(tickers2sid, fields, dimensions, raw_path):
+    """
+    Populates the raw/ folder based on a single dump download.
+
+    :param tickers2sid: a dict with the ticker string as the key and the SID
+    as the value
+    :param fields: a list of field names
+    :param dimensions: a list with dimensions for each field in fields
+    :param raw_path: the path to the folder to write the files.
+    """
+    assert len(fields) == len(dimensions)
+
+    df = pd.read_csv(DUMP_FILE)  # open dump file
+
+    df = df[['ticker', 'dimension', 'datekey'] + fields]  # remove columns not in fields
+    for tkr, df_tkr in df.groupby('ticker'):
+        print('processing: ', tkr)
+
+        sid = tickers2sid.get(tkr)
+        if sid is None:
+            print('no sid found for: {}'.format(tkr))
+            continue
+
+        df_tkr = df_tkr.rename(columns={'datekey': 'Date'}).set_index('Date')
+
+        # loop over the fields and dimensions
+        series = []
+        for i, field in enumerate(fields):
+            s = df_tkr[df_tkr.dimension == dimensions[i]][field]
+            series.append(s)
+        df_tkr = pd.concat(series, axis=1)
+        print("AFTER reorganizing")
+        print(df_tkr)
+
+        # write raw file: raw/
+        df_tkr.to_csv(os.path.join(raw_path, "{}.csv".format(sid)))
+
+
+
+def populate_raw_data_from_api(tickers, fields, dimensions, raw_path):
     """tickers is a dict with the ticker string as the key and the SID
     as the value.
     For each field a dimension is required, so dimensions should be a list
@@ -101,17 +142,21 @@ def populate_raw_data_aqr(tickers, fields, raw_path):
         except quandl.errors.quandl_error.NotFoundError:
             print("error with ticker: {}".format(ticker))
 
-def demo():
-    # demo works on free data
 
+def demo():  # demo works on free data
     tickers = {"WMT":3173, "HD":2912, "DOGGY":69, "CSCO":2809}
     fields = ["GP", "CAPEX", "EBIT", "ASSETS"]
-    populate_raw_data(tickers, fields, os.path.join(BASE, RAW_FLDR))
+    populate_raw_data_from_api(tickers, fields, os.path.join(BASE, RAW_FLDR))
 
 
-def all_tickers_for_bundle(fields, dims, bundle_name, raw_path=os.path.join(BASE,RAW_FLDR)):
+def all_tickers_for_bundle_from_api(fields, dims, bundle_name, raw_path=os.path.join(BASE, RAW_FLDR)):
     tickers = get_ticker_sid_dict_from_bundle(bundle_name)
-    populate_raw_data(tickers, fields, dims, raw_path)
+    populate_raw_data_from_api(tickers, fields, dims, raw_path)
+
+
+def all_tickers_for_bundle_from_dump(fields, dims, bundle_name, raw_path=os.path.join(BASE, RAW_FLDR)):
+    tickers = get_ticker_sid_dict_from_bundle(bundle_name)
+    populate_raw_data_from_dump(tickers, fields, dims, raw_path)
 
 
 def num_tkrs_in_bundle(bundle_name):
@@ -120,7 +165,6 @@ def num_tkrs_in_bundle(bundle_name):
 
 if __name__ == '__main__':
 
-    # demo()
     # fields = ["marketcap", "pb"]  # minimum fundamentals for risk
     # fields = ["ROE", "BVPS", "SPS", "FCFPS", "PRICE"]
     fields0 = ['netinc', 'equity', 'bvps', 'sps', 'fcfps', 'price']  # basic QV
@@ -131,25 +175,25 @@ if __name__ == '__main__':
     # dimensions1 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
 
     # Marc's turntup Quality companies in an uptrend
-    fields2 = ['roe', 'marketcap', 'de', 'debt', 'debtnc']
-    dimensions2 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
+    # fields2 = ['roe', 'marketcap', 'de', 'debt', 'debtnc']
+    # dimensions2 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
 
-    fields = fields0 #+ fields2
-    dimensions = dimensions0 #+ dimensions2
+    # more value
+    fields3 = ['ebitda', 'ev', 'pe', 'pe1', 'marketcap']
+    dimensions3 = ['ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
 
-    from zipline.data.bundles.core import register
-    from alphacompiler.data.loaders.sep_quandl import from_sep_dump
+    fields = fields0 + fields3
+    dimensions = dimensions0 + dimensions3
 
     BUNDLE_NAME = 'sep'
-    register(BUNDLE_NAME, from_sep_dump('.'), )
     num_tickers = num_tkrs_in_bundle(BUNDLE_NAME)
     print('number of tickers: ', num_tickers)
 
-    all_tickers_for_bundle(fields, dimensions, 'sep')  # downloads the data to /raw
-    pack_sparse_data(num_tickers + 1,  # number of tickers in buldle + 1
-                    os.path.join(BASE, RAW_FLDR),
-                    fields,
-                    ZIPLINE_DATA_DIR + FN)  # write directly to the zipline data dir
+    all_tickers_for_bundle_from_dump(fields, dimensions, 'sep')  # downloads the data to /raw
+    # pack_sparse_data(num_tickers + 1,  # number of tickers in buldle + 1
+    #                 os.path.join(BASE, RAW_FLDR),
+    #                 fields,
+    #                 ZIPLINE_DATA_DIR + FN)  # write directly to the zipline data dir
 
 
     print("this worked boss")
