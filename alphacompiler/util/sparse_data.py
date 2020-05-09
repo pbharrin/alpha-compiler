@@ -24,8 +24,10 @@ class SparseDataFactor(CustomFactor):
     window_length = 1
 
     def __init__(self, *args, **kwargs):
+        print('Sparse Data was initialized')
         self.time_index = None
         self.curr_date = None # date for which time_index is accurate
+        self.last_date_seen = 0  # todo change to to the earliest date possible
         self.data = None
         self.data_path = "please_specify_.npy_file"
 
@@ -88,10 +90,11 @@ class SparseDataFactor(CustomFactor):
 
     def compute(self, today, assets, out, *arrays):
         # for each asset in assets determine index from date (today)
-        if self.time_index is None:
+        if self.time_index is None or today < self.last_date_seen:
             self.cold_start(today, assets)
         else:
             self.update_time_index(today, assets)
+        self.last_date_seen = today
 
         ti_used_today = self.time_index[assets]
 
