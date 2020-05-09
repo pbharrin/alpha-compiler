@@ -24,7 +24,6 @@ class SparseDataFactor(CustomFactor):
     window_length = 1
 
     def __init__(self, *args, **kwargs):
-        print('Sparse Data was initialized')
         self.time_index = None
         self.curr_date = None # date for which time_index is accurate
         self.last_date_seen = 0  # todo change to to the earliest date possible
