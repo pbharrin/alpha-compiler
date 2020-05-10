@@ -3,8 +3,11 @@
 """
 Created by Peter Harrington (pbharrin) on 10/10/17.
 
-This file contains the CustomFactors that can be used in
-Zipline's Pipeline.
+This file contains a CustomFactor that can be used in
+Zipline's Pipeline.  This factor supplies data that changes infrequently, and perhaps in
+a non-uniform pattern to Pipeline which gets data for each trading day.  The one obvious
+application of this is equity fundamental data, which is changed 4x/year and the reporting
+dates are not the same for each company.
 """
 
 from zipline.pipeline.factors import CustomFactor
@@ -12,6 +15,7 @@ import numpy as np
 from os import listdir
 import pandas as pd
 import os
+
 
 class SparseDataFactor(CustomFactor):
     """Abstract Base Class to be used for computing sparse data.
@@ -25,11 +29,10 @@ class SparseDataFactor(CustomFactor):
 
     def __init__(self, *args, **kwargs):
         self.time_index = None
-        self.curr_date = None # date for which time_index is accurate
-        self.last_date_seen = 0  # todo change to to the earliest date possible
+        self.curr_date = None     # date for which time_index is accurate
+        self.last_date_seen = 0   # earliest date possible
         self.data = None
         self.data_path = "please_specify_.npy_file"
-
 
     def bs(self, arr):
         """Binary Search"""
@@ -44,7 +47,6 @@ class SparseDataFactor(CustomFactor):
         else:
             return mid + self.bs(arr[mid:])
 
-
     def bs_sparse_time(self, sid):
         """For each security find the best range in the sparse data."""
         dates_for_sid = self.data.date[sid]
@@ -55,7 +57,6 @@ class SparseDataFactor(CustomFactor):
         # where self.curr_date will lie.
         non_nan_dates = dates_for_sid[~np.isnan(dates_for_sid)]
         return self.bs(non_nan_dates) - 1
-
 
     def cold_start(self, today, assets):
         if self.data is None:
@@ -71,7 +72,6 @@ class SparseDataFactor(CustomFactor):
         for asset in assets:  # asset is numpy.int64
             self.time_index[asset] = self.bs_sparse_time(asset)
 
-
     def update_time_index(self, today, assets):
         """Ratchet update.
 
@@ -85,7 +85,6 @@ class SparseDataFactor(CustomFactor):
         self.time_index[sids_to_increment & sids_not_max] += 1
 
         self.curr_date = today.value
-
 
     def compute(self, today, assets, out, *arrays):
         # for each asset in assets determine index from date (today)
@@ -101,11 +100,9 @@ class SparseDataFactor(CustomFactor):
             out[field][:] = self.data[field][assets, ti_used_today]
 
 
-
 def pack_sparse_data(N, rawpath, fields, filename):
     """pack data into np.recarray and persists it to a file to be
     used by SparseDataFactor"""
-
 
     # create buffer to hold data for all tickers
     dfs = [None] * N
