@@ -10,6 +10,7 @@ from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundl
 from alphacompiler.util.sparse_data import pack_sparse_data
 from alphacompiler.util import quandl_tools
 import alphacompiler.util.load_extensions  # this simply loads the extensions
+from zipline.utils.paths import zipline_root
 
 from logbook import Logger
 import datetime
@@ -22,7 +23,7 @@ RAW_FLDR = "raw"  # folder to store the raw text file
 START_DATE = '2009-01-01'  # this is only used for getting data from the API
 END_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
 
-ZIPLINE_DATA_DIR = '/Users/peterharrington/.zipline/data/'  # TODO: get this from Zipline api
+ZIPLINE_DATA_DIR = zipline_root() + '/data/'
 FN = "SF1.npy"  # the file name to be used when storing this in ~/.zipline/data
 
 DUMP_FILE = '/Users/peterharrington/Downloads/SHARADAR_SF1_2daa4baaad2a300c166b5c0f7e546bd1.csv'
@@ -167,8 +168,8 @@ if __name__ == '__main__':
 
     # fields = ["marketcap", "pb"]  # minimum fundamentals for risk
     # fields = ["ROE", "BVPS", "SPS", "FCFPS", "PRICE"]
-    fields0 = ['netinc', 'equity', 'bvps', 'sps', 'fcfps', 'price']  # basic QV
-    dimensions0 = ['ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
+    # fields0 = ['netinc', 'equity', 'bvps', 'sps', 'fcfps', 'price']  # basic QV
+    # dimensions0 = ['ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
 
     # magic formula
     # fields1 = ['ebit', 'workingcapital', 'assets', 'assetsc', 'intangibles', 'ev', 'marketcap']
@@ -179,21 +180,26 @@ if __name__ == '__main__':
     # dimensions2 = ['ART', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
 
     # more value
-    fields3 = ['ebitda', 'ev', 'pe', 'pe1', 'marketcap']
-    dimensions3 = ['ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
+    # fields3 = ['ebitda', 'ev', 'pe', 'pe1', 'marketcap']
+    # dimensions3 = ['ARQ', 'ARQ', 'ARQ', 'ARQ', 'ARQ']
+    #
+    # fields = fields0 + fields3
+    # dimensions = dimensions0 + dimensions3
 
-    fields = fields0 + fields3
-    dimensions = dimensions0 + dimensions3
+    fields = ['assetsavg','bvps','capex','cashnequsd','debtusd','dps','ebitdausd','ebitusd','equityavg','equityusd',
+               'fcf','fcfps', 'gp', 'intangibles','liabilitiesc','ncfo','netinc','netinccmn','netinccmnusd','price',
+               'revenueusd','roa','roe','roic','sharefactor','sps','sharesbas','shareswa']
+    dimensions = ['ART'] * len(fields)  # use all ART
 
     BUNDLE_NAME = 'sep'
     num_tickers = num_tkrs_in_bundle(BUNDLE_NAME)
     print('number of tickers: ', num_tickers)
 
     all_tickers_for_bundle_from_dump(fields, dimensions, 'sep')  # downloads the data to /raw
-    # pack_sparse_data(num_tickers + 1,  # number of tickers in buldle + 1
-    #                 os.path.join(BASE, RAW_FLDR),
-    #                 fields,
-    #                 ZIPLINE_DATA_DIR + FN)  # write directly to the zipline data dir
+    pack_sparse_data(num_tickers + 1,  # number of tickers in buldle + 1
+                    os.path.join(BASE, RAW_FLDR),
+                    fields,
+                    ZIPLINE_DATA_DIR + FN)  # write directly to the zipline data dir
 
 
     print("this worked boss")

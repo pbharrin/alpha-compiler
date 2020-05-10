@@ -11,5 +11,5 @@ setup(name='Alpha Compiler',
       packages=['alphacompiler',
           'alphacompiler.util', 
           'alphacompiler.data', 
-          'alphacompiler.data.loaders'],
-     )
+          'alphacompiler.data.loaders'], requires=['pandas', 'zipline', 'numpy']
+      )

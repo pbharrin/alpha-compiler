@@ -1,7 +1,8 @@
 
 from alphacompiler.util.sparse_data import SparseDataFactor
 from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
-import os
+from zipline.utils.paths import zipline_root
+
 # TODO: this should be deleted and only included as an example
 # this code should go with your application code.
 class Fundamentals(SparseDataFactor):
@@ -12,4 +13,4 @@ class Fundamentals(SparseDataFactor):
         super(Fundamentals, self).__init__(*args, **kwargs)
         self.N = len(get_ticker_sid_dict_from_bundle("sep")) + 1  # max(sid)+1 get this from the bundle
 
-        self.data_path = '/Users/peterharrington/.zipline/data/' + 'SF1.npy'
+        self.data_path = zipline_root() + '/data/SF1.npy'

@@ -5,10 +5,12 @@ Created by Peter Harrington (pbharrin) on 8/5/19.
 """
 
 from zipline.pipeline.factors import CustomFactor
+from zipline.utils.paths import zipline_root
+
 import numpy as np
 
 
-ZIPLINE_DATA_DIR = '/Users/peterharrington/.zipline/data/'  # TODO: get this from Zipline api
+ZIPLINE_DATA_DIR = zipline_root() + '/data/'
 SID_FILE = "SHARDAR_sectors.npy"
 
 STATIC_FILE = "SHARDAR_static.npy"
