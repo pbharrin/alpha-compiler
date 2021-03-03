@@ -4,19 +4,19 @@ Custom Bundle for Loading the IEX cloud data.
 Created by Peter Harrington (pbharrin) on 2/25/2021.
 """
 
-
 import pandas as pd
 import sys
 from os import listdir
 import trading_calendars as tc
 
-
 METADATA_HEADERS = ['start_date', 'end_date', 'auto_close_date',
                     'symbol', 'exchange', 'asset_name']
 
-UNUSED_COLUMNS = ['close','high','low','open','volume','id','key','subkey','updated','changeOverTime','marketChangeOverTime','uOpen','uClose','uHigh','uLow','uVolume','label','change','changePercent']
+UNUSED_COLUMNS = ['close', 'high', 'low', 'open', 'volume', 'id', 'key', 'subkey', 'updated', 'changeOverTime',
+                  'marketChangeOverTime', 'uOpen', 'uClose', 'uHigh', 'uLow', 'uVolume', 'label', 'change',
+                  'changePercent']
 
-MISSING_DAYS_THRESH = 20 # max allowable number of missing dates (in 15 years)
+MISSING_DAYS_THRESH = 20  # max allowable number of missing dates (in 15 years)
 
 
 def from_iex_dir(folder_name, start=None, end=None):
@@ -52,8 +52,8 @@ def from_iex_dir(folder_name, start=None, end=None):
         print("starting ingesting data from: {}".format(folder_name))
 
         # read in the whole dump (will require ~7GB of RAM)
-	#df = pd.read_csv(file_name, index_col='date',
-	#                 parse_dates=['date'], na_values=['NA'])
+        # df = pd.read_csv(file_name, index_col='date',
+        #                 parse_dates=['date'], na_values=['NA'])
 
         # counter of valid securites, this will be our primary key
         sec_counter = 0
@@ -62,13 +62,16 @@ def from_iex_dir(folder_name, start=None, end=None):
 
         # iterate over all the unique securities and pack data, and metadata
         # for writing
-	#for tkr, df_tkr in df.groupby('ticker'):
+        # for tkr, df_tkr in df.groupby('ticker'):
         for fn in listdir(folder_name):
             print('preparing {}'.format(fn))
-            df_tkr = pd.read_csv(folder_name + fn, index_col='date',
-                         parse_dates=['date'], na_values=['NA'])
-            #print(" preparing {}".format(df_tkr.ix[0]["symbol"]))
-            #print(df_tkr)
+            try:
+                df_tkr = pd.read_csv(folder_name + fn, index_col='date',
+                                     parse_dates=['date'], na_values=['NA'])
+            except pd.errors.EmptyDataError:
+                print('No data in: {}, skipping.'.format(fn))
+                continue
+
             try:
                 df_tkr = df_tkr.drop(UNUSED_COLUMNS, axis=1)
             except:
@@ -76,15 +79,15 @@ def from_iex_dir(folder_name, start=None, end=None):
                 continue
             df_tkr = df_tkr.sort_index()
             df_tkr = df_tkr.rename(columns={'fOpen': 'open',
-		                            'fClose': 'close',
-					    'fHigh': 'high',
-					    'fLow': 'low',
-					    'fVolume': 'volume'}) 
+                                            'fClose': 'close',
+                                            'fHigh': 'high',
+                                            'fLow': 'low',
+                                            'fVolume': 'volume'})
 
             row0 = df_tkr.ix[0]  # get metadata from row
 
-	    # check to see if there are missing interstitial dates
-	    #this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]
+            # check to see if there are missing interstitial dates
+            # this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]
             this_cal = us_calendar.sessions_in_range(df_tkr.index[0], df_tkr.index[-1])
             # remove extra days (weekends and shit)
             df_tkr['dateUTC'] = df_tkr.index.tz_localize('UTC')
@@ -112,7 +115,7 @@ def from_iex_dir(folder_name, start=None, end=None):
                                   df_tkr.index[-1] + pd.Timedelta(days=1),
                                   row0["symbol"],
                                   "IEX",  # all have exchange = IEX 
-                                  row0["symbol"]  
+                                  row0["symbol"]
                                   )
                                  )
 
