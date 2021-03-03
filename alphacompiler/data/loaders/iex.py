@@ -5,7 +5,6 @@ Created by Peter Harrington (pbharrin) on 2/25/2021.
 """
 
 import pandas as pd
-import sys
 from os import listdir
 import trading_calendars as tc
 
@@ -51,10 +50,6 @@ def from_iex_dir(folder_name, start=None, end=None):
 
         print("starting ingesting data from: {}".format(folder_name))
 
-        # read in the whole dump (will require ~7GB of RAM)
-        # df = pd.read_csv(file_name, index_col='date',
-        #                 parse_dates=['date'], na_values=['NA'])
-
         # counter of valid securites, this will be our primary key
         sec_counter = 0
         data_list = []  # list to send to daily_bar_writer
@@ -62,7 +57,6 @@ def from_iex_dir(folder_name, start=None, end=None):
 
         # iterate over all the unique securities and pack data, and metadata
         # for writing
-        # for tkr, df_tkr in df.groupby('ticker'):
         for fn in listdir(folder_name):
             print('preparing {}'.format(fn))
             try:
@@ -87,26 +81,11 @@ def from_iex_dir(folder_name, start=None, end=None):
             row0 = df_tkr.ix[0]  # get metadata from row
 
             # check to see if there are missing interstitial dates
-            # this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]
             this_cal = us_calendar.sessions_in_range(df_tkr.index[0], df_tkr.index[-1])
             # remove extra days (weekends and shit)
             df_tkr['dateUTC'] = df_tkr.index.tz_localize('UTC')
             df_tkr = df_tkr.set_index('dateUTC')
             df_tkr = df_tkr.loc[this_cal]
-            """
-            number_missing = len(this_cal) - df_tkr.shape[0]
-            assert number_missing >= 0
-            if number_missing > 0:
-                if number_missing < MISSING_DAYS_THRESH:
-                    print('MISSING interstitial dates for: %s using forward fill' % row0['symbol'])
-                    print('number of dates missing: {}'.format(number_missing))
-                    df_desired = pd.DataFrame(index=this_cal.tz_localize(None))
-                    df_desired = df_desired.join(df_tkr)
-                    df_tkr = df_desired.fillna(method='ffill')
-                else:
-                    print('{} has too many missing days, skipping'.format(fn))
-                    continue
-            """
 
             # update metadata; 'start_date', 'end_date', 'auto_close_date',
             # 'symbol', 'exchange', 'asset_name'
