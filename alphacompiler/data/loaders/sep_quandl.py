@@ -9,6 +9,8 @@ import pandas as pd
 from zipline.utils.calendars import get_calendar
 import sys
 
+# Exchange Metadata (for country code mapping)
+exchange_d = {'exchange': ['SEP'], 'canonical_name': ['SEP'], 'country_code': ['US']}
 
 METADATA_HEADERS = ['start_date', 'end_date', 'auto_close_date',
                     'symbol', 'exchange', 'asset_name']
@@ -93,7 +95,7 @@ def from_sep_dump(file_name, start=None, end=None):
                                   df_tkr.index[-1] + pd.Timedelta(days=1),
                                   row0["ticker"],
                                   "SEP",  # all have exchange = SEP
-                                  row0["ticker"]  # TODO: can we delete this?
+                                  row0["ticker"]
                                   )
                                  )
 
@@ -110,7 +112,8 @@ def from_sep_dump(file_name, start=None, end=None):
 
         # write metadata
         asset_db_writer.write(equities=pd.DataFrame(metadata_list,
-                                                    columns=METADATA_HEADERS))
+                                                    columns=METADATA_HEADERS),
+                              exchanges=pd.DataFrame(data=exchange_d))
         print("a total of {} securities were loaded into this bundle".format(
             sec_counter))
 

@@ -17,6 +17,9 @@ UNUSED_COLUMNS = ['close', 'high', 'low', 'open', 'volume', 'id', 'key', 'subkey
 
 MISSING_DAYS_THRESH = 20  # max allowable number of missing dates (in 15 years)
 
+# Exchange Metadata (for country code mapping)
+exchange_d = {'exchange': ['IEX'], 'canonical_name': ['IEX'], 'country_code': ['US']}
+
 
 def from_iex_dir(folder_name, start=None, end=None):
     """
@@ -94,7 +97,7 @@ def from_iex_dir(folder_name, start=None, end=None):
                                   df_tkr.index[-1] + pd.Timedelta(days=1),
                                   row0["symbol"],
                                   "IEX",  # all have exchange = IEX 
-                                  row0["symbol"]
+                                  row0["symbol"],
                                   )
                                  )
 
@@ -112,7 +115,8 @@ def from_iex_dir(folder_name, start=None, end=None):
 
         # write metadata
         asset_db_writer.write(equities=pd.DataFrame(metadata_list,
-                                                    columns=METADATA_HEADERS))
+                                                    columns=METADATA_HEADERS),
+                              exchanges=pd.DataFrame(data=exchange_d))
         print("a total of {} securities were loaded into this bundle".format(
             sec_counter))
 

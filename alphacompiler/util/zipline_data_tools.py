@@ -8,7 +8,8 @@ import os
 from zipline.data.bundles.core import load
 import numpy as np
 from zipline.utils.math_utils import nanmean, nanstd
-from zipline.pipeline import SimplePipelineEngine, USEquityPricingLoader
+from zipline.pipeline import SimplePipelineEngine
+from zipline.pipeline.loaders import USEquityPricingLoader
 from zipline.pipeline.data import USEquityPricing
 
 
@@ -66,7 +67,7 @@ def get_tickers_from_bundle(bundle_name):
     bundle_data = load(bundle_name, os.environ, None)
 
     # get a list of all sids
-    lifetimes = bundle_data.asset_finder._compute_asset_lifetimes()
+    lifetimes = bundle_data.asset_finder._compute_asset_lifetimes(frozenset([str("US")]))
     all_sids = lifetimes.sid
 
     # retreive all assets in the bundle
@@ -81,7 +82,7 @@ def get_all_assets_for_bundle(bundle_name):
     bundle_data = load(bundle_name, os.environ, None)
 
     # get a list of all sids
-    lifetimes = bundle_data.asset_finder._compute_asset_lifetimes()
+    lifetimes = bundle_data.asset_finder._compute_asset_lifetimes(frozenset([str("US")]))
     all_sids = lifetimes.sid
 
     print('all_sids: ', all_sids)
