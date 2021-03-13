@@ -60,7 +60,7 @@ class SparseDataFactor(CustomFactor):
 
     def cold_start(self, today, assets):
         if self.data is None:
-            self.data = np.load(self.data_path)
+            self.data = np.load(self.data_path, allow_pickle=True)
 
         self.M = self.data.date.shape[1]
 

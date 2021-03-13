@@ -35,4 +35,4 @@ pipe = Pipeline(columns={'Close': USEquityPricing.close.latest},)
 # 1.3 run your pipeline with the pipeline engine
 stocks = spe.run_pipeline(pipe, str2dt(backtest_dates[0]), str2dt(backtest_dates[1]))
 
-print stocks
+print(stocks)

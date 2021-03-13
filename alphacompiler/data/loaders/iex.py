@@ -117,6 +117,7 @@ def from_iex_dir(folder_name, start=None, end=None):
         asset_db_writer.write(equities=pd.DataFrame(metadata_list,
                                                     columns=METADATA_HEADERS),
                               exchanges=pd.DataFrame(data=exchange_d))
+        adjustment_writer.write()
         print("a total of {} securities were loaded into this bundle".format(
             sec_counter))
 

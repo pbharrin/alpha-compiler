@@ -92,7 +92,7 @@ def num_tkrs_in_bundle(bundle_name):
 if __name__ == '__main__':
 
     # Marc's turntup Quality companies in an uptrend
-    fields = ['roe', 'marketcap', 'de', 'debt', 'debtnc']
+    # fields = ['roe', 'marketcap', 'de', 'debt', 'debtnc']
     fields = ['Revenue', 'Net_Income', 'Total_Assets', 'Total_Current_Liabilities']
 
 
