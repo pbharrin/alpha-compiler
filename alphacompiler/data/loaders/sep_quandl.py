@@ -10,7 +10,8 @@ from zipline.utils.calendars import get_calendar
 import sys
 
 # Exchange Metadata (for country code mapping)
-exchange_d = {'exchange': ['SEP'], 'canonical_name': ['SEP'], 'country_code': ['US']}
+EXCHANGE_NAME = 'NYSE'
+exchange_d = {'exchange': [EXCHANGE_NAME], 'canonical_name': [EXCHANGE_NAME], 'country_code': ['US']}
 
 METADATA_HEADERS = ['start_date', 'end_date', 'auto_close_date',
                     'symbol', 'exchange', 'asset_name']
@@ -94,7 +95,7 @@ def from_sep_dump(file_name, start=None, end=None):
                                   df_tkr.index[-1],
                                   df_tkr.index[-1] + pd.Timedelta(days=1),
                                   row0["ticker"],
-                                  "SEP",  # all have exchange = SEP
+                                  EXCHANGE_NAME,  # all have exchange = NYSE, even though this is not true
                                   row0["ticker"]
                                   )
                                  )
