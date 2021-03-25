@@ -21,6 +21,7 @@ END_DATE = datetime.datetime.today().strftime('%Y-%m-%d')
 ZIPLINE_DATA_DIR = zipline_root() + '/data/'
 FN = "4th.npy"  # the file name to be used when storing this in ~/.zipline/data
 
+# TODO: add this to a config file
 DUMP_FILE = '/Users/peter/Documents/Bitbucket/qlite-backend/fundamental/data/master.csv'
 
 log = Logger('load_4thquartile_fund.py')
@@ -93,7 +94,7 @@ if __name__ == '__main__':
 
     # Marc's turntup Quality companies in an uptrend
     # fields = ['roe', 'marketcap', 'de', 'debt', 'debtnc']
-    fields = ['Revenue', 'Net_Income', 'Total_Assets', 'Total_Current_Liabilities']
+    fields = ['Revenue', 'Net_Income', 'Total_Assets', 'Total_Current_Liabilities', 'Shareholder_Equity', 'roe']
 
 
     BUNDLE_NAME = 'iex'

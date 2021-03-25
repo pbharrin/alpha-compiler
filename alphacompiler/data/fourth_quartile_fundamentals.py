@@ -5,7 +5,7 @@ from zipline.utils.paths import zipline_root
 
 # this code should go with your application code.
 class Fundamentals(SparseDataFactor):
-    outputs = ['Revenue', 'Net_Income', 'Total_Assets', 'Total_Current_Liabilities']
+    outputs = ['Revenue', 'Net_Income', 'Total_Assets', 'Total_Current_Liabilities', 'Shareholder_Equity', 'roe']
 
     def __init__(self, *args, **kwargs):
         super(Fundamentals, self).__init__(*args, **kwargs)
