@@ -76,6 +76,8 @@ def from_crypto_dir(folder_name, start=None, end=None):
             this_cal = us_calendar.sessions_in_range(df_tkr.index[0], df_tkr.index[-1])
             # remove extra days (weekends and shit)
             df_tkr = df_tkr.reindex(this_cal)
+            # divide the volume by 1000
+            df_tkr['volume'] = df_tkr['volume']/1000
 
             # update metadata; 'start_date', 'end_date', 'auto_close_date',
             # 'symbol', 'exchange', 'asset_name'
