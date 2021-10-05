@@ -7,8 +7,13 @@ from os import listdir
 
 from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
 from alphacompiler.util.sparse_data import clear_raw_folder
+from zipline.utils.paths import zipline_root
+import alphacompiler.util.load_extensions  # code exectutes when this is imported.
+
 RAW_FLDR = "raw"
 BUNDLE_NAME = 'crypto'
+
+ZIPLINE_DATA_DIR = zipline_root() + '/data/'
 
 def num_tkrs_in_bundle(bundle_name):
     return len(get_ticker_sid_dict_from_bundle(bundle_name))
@@ -21,15 +26,21 @@ def populate_raw_folder(tkr_data_folder:str, bundle_name:str):
     :return:
     """
     clear_raw_folder(RAW_FLDR)
-    tickers = get_ticker_sid_dict_from_bundle(bundle_name)
+    tickers2sid = get_ticker_sid_dict_from_bundle(bundle_name)
 
     #
     for fn in listdir(tkr_data_folder):
         if not fn.endswith(".csv"):
             continue
-        tkr = fn.split('.'[0])
-        #sid = tickers2sid.get(tkr)
-        print(f'processing: {tkr}')
+        tkr = fn.split('.')[0]
+        sid = tickers2sid.get(tkr.upper())
+        print(f'processing: {tkr}, sid: {sid}')
+        # files have the following header timestamp,marketcap_dominance
+
+        # reformat
+        # write to file in /raw
+        # write raw file: raw/
+        #df_tkr.to_csv(os.path.join(raw_path, "{}.csv".format(sid)))
 
 # TODO: move to alphacompiler.util when this is ready
 def pack_dense_data(bundle_name:str, data_dir:str):
