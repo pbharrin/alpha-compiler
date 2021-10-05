@@ -15,6 +15,7 @@ import numpy as np
 from os import listdir
 import pandas as pd
 import os
+import glob
 
 
 class SparseDataFactor(CustomFactor):
@@ -144,3 +145,11 @@ def pack_sparse_data(N, rawpath, fields, filename):
             data[field][i, :ind_len] = df[field]
 
     data.dump(filename)  # can be read back with np.load()
+
+
+def clear_raw_folder(raw_folder_path):
+    # removes all the files in the raw folder
+    print('   **   clearing the raw/ folder   **')
+    files = glob.glob(raw_folder_path + '/*')
+    for f in files:
+        os.remove(f)

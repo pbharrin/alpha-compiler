@@ -3,7 +3,7 @@ Packs the fundamental data from a single 4th Quartile csv dump.
 """
 
 from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundle
-from alphacompiler.util.sparse_data import pack_sparse_data
+from alphacompiler.util.sparse_data import pack_sparse_data, clear_raw_folder
 import alphacompiler.util.load_extensions  # this simply loads the extensions
 from zipline.utils.paths import zipline_root
 
@@ -11,7 +11,7 @@ from logbook import Logger
 import datetime
 import os
 import pandas as pd
-import glob
+
 
 BASE = os.path.dirname(os.path.realpath(__file__))
 RAW_FLDR = "raw"  # folder to store the raw text file
@@ -25,14 +25,6 @@ FN = "4th.npy"  # the file name to be used when storing this in ~/.zipline/data
 DUMP_FILE = '/Users/peter/Documents/Bitbucket/qlite-backend/fundamental/data/master.csv'
 
 log = Logger('load_4thquartile_fund.py')
-
-
-def clear_raw_folder(raw_folder_path):
-    # removes all the files in the raw folder
-    print('   **   clearing the raw/ folder   **')
-    files = glob.glob(raw_folder_path + '/*')
-    for f in files:
-        os.remove(f)
 
 
 def populate_raw_data_from_dump(tickers2sid, fields, raw_path):
