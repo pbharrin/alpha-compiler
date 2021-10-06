@@ -7,7 +7,7 @@ Created by Peter Harrington (pbharrin) on 9/22/2021.
 
 import pandas as pd
 from os import listdir
-import trading_calendars as tc
+from alphacompiler.util.crypto_trading_calendar import TwentyFourSevenCal
 
 METADATA_HEADERS = ['start_date', 'end_date', 'auto_close_date',
                     'symbol', 'exchange', 'asset_name']
@@ -36,14 +36,14 @@ def from_crypto_dir(folder_name, start=None, end=None):
 
     """
     ticker2sid_map = {}
-    us_calendar = tc.get_calendar("XNYS")  # TODO: change this to 24/7
+    us_calendar = TwentyFourSevenCal()
 
     def ingest(environ,
                asset_db_writer,
                minute_bar_writer,  # unused
                daily_bar_writer,
                adjustment_writer,
-               calendar,
+               us_calendar,
                cache,
                show_progress,
                output_dir,
@@ -74,8 +74,14 @@ def from_crypto_dir(folder_name, start=None, end=None):
 
             # check to see if there are missing interstitial dates
             this_cal = us_calendar.sessions_in_range(df_tkr.index[0], df_tkr.index[-1])
-            # remove extra days (weekends and shit)
+
+            num_missing_dates = len(this_cal) - df_tkr.shape[0]
+            if num_missing_dates > MISSING_DAYS_THRESH:
+                print(f'too many missing dates({num_missing_dates}) for {tkr}, skipping')
+                continue
+            # fill in missing dates with NaNs
             df_tkr = df_tkr.reindex(this_cal)
+
             # divide the volume by 1000
             df_tkr['volume'] = df_tkr['volume']/1000
 
