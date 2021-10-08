@@ -9,8 +9,10 @@ from alphacompiler.util.zipline_data_tools import get_ticker_sid_dict_from_bundl
 
 def pack_dense_data(raw_fldr, final_fn, bundle_name):
     """
-    use a pd.DataFrame, the index could be dates and SIDs
-    the column order is preserved when you create and retreive data.
+    This uses a pd.DataFrame, the index is dates and SIDs.
+    Special care is taken to make sure every SID has a value for
+    every date.  This simplifies the runtime code.
+    Multiple columns of data can be stored, no extra work is required.
     """
     all_dfs = []
     # create a pandas dataframe
@@ -65,20 +67,14 @@ class DenseDataFactor(CustomFactor):
         self.data = None
         self.data_path = "please_specify_.npy_file"
 
-
     def compute(self, today, assets, out, *arrays):
-        #
-        # OPTION 1
-        # store data as an dict, and a np.ndarray in a pickle.
-        # today is a date(time) while the ndarry requires an int
-        # I could hold an extra map form date to an index in the array.
-        # date_map
+        """
+        This simply loads the data from a parquet and then reads the
+        data and outputs it.  See pack_dense_data() above for how to store
+        the data.
+        """
         if self.data is None:
             self.data = pd.read_parquet(self.data_path)
-        outs = 'marketcap_dominance'
 
-        out[outs][:] = self.data.loc[(today, assets), outs].values
-
-        # below is the version from sparse_data
-        # for field in self.__class__.outputs:
-        #     out[field][:] = self.data[field][assets, today_i]
+        for field in self.__class__.outputs:
+            out[field][:] = self.data.loc[(today, assets), field].values
