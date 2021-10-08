@@ -53,6 +53,6 @@ def populate_raw_folder(tkr_data_folder:str, bundle_name:str):
 if __name__ == '__main__':
     data_dir = '/Users/peterharrington/Documents/Bitbucket/cryptoresearch/messari_historical_data/dom'
     # populate_raw_folder(data_dir, BUNDLE_NAME)
-    pack_dense_data(RAW_FLDR, ZIPLINE_DATA_DIR + 'mktdom.parquet.gzip')
+    pack_dense_data(RAW_FLDR, ZIPLINE_DATA_DIR + 'mktdom.parquet.gzip', BUNDLE_NAME)
 
     print('this works')
