@@ -13,9 +13,26 @@ METADATA_HEADERS = ['start_date', 'end_date', 'auto_close_date',
                     'symbol', 'exchange', 'asset_name']
 
 MISSING_DAYS_THRESH = 20  # max allowable number of missing dates (in 15 years)
+UINT32_MAX = 4294967295
 
 # Exchange Metadata (for country code mapping)
 exchange_d = {'exchange': ['CRYPTO'], 'canonical_name': ['CRYPTO'], 'country_code': ['US']}
+
+
+def scale_df_for_uint32(dfin):
+    """
+    Dynamically scales the price and volume so that they fit into uint32.
+    Preserves market cap.
+    """
+    sf = 1.0  # scale factor
+    while dfin['volume'].max() > UINT32_MAX:
+        sf = sf * 2
+        print('  ****** this will cause overflow  ********')
+        dfin['volume'] = dfin['volume']/sf
+        for field in ['open', 'high', 'low', 'close']:
+            dfin[field] = dfin[field] * sf
+
+    return dfin
 
 
 def from_crypto_dir(folder_name, start=None, end=None):
@@ -83,7 +100,9 @@ def from_crypto_dir(folder_name, start=None, end=None):
             df_tkr = df_tkr.reindex(this_cal)
 
             # divide the volume by 1000
-            df_tkr['volume'] = df_tkr['volume']/1000
+            # df_tkr['volume'] = df_tkr['volume']/1000
+
+            df_tkr = scale_df_for_uint32(df_tkr)
 
             # update metadata; 'start_date', 'end_date', 'auto_close_date',
             # 'symbol', 'exchange', 'asset_name'
