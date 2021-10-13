@@ -1,6 +1,5 @@
 """
 Custom Bundle for Loading the Crypto data.
-
 Created by Peter Harrington (pbharrin) on 9/22/2021.
 """
 
@@ -18,39 +17,40 @@ UINT32_MAX = 4294967295
 # Exchange Metadata (for country code mapping)
 exchange_d = {'exchange': ['CRYPTO'], 'canonical_name': ['CRYPTO'], 'country_code': ['US']}
 
+TRUE_STARTS = {'BCH': pd.to_datetime('2017-08-09', utc=True),
+               'AAVE': pd.to_datetime('2020-10-07', utc=True)}
+
 
 def scale_df_for_uint32(dfin):
     """
     Dynamically scales the price and volume so that they fit into uint32.
     Preserves market cap.
     """
-    sf = 1.0  # scale factor
-    while dfin['volume'].max() > UINT32_MAX:
-        sf = sf * 2
-        print('  ****** this will cause overflow  ********')
-        dfin['volume'] = dfin['volume']/sf
+    sf = 2.0  # scale factor
+    if dfin['low'].min() <= 0:  # for debug purposes
+        print('adjusting for less or equal to 0')
+        print('the min is: ', dfin['low'].idxmin())
+
+    while dfin['low'].min() < 10:
+        dfin['volume'] = dfin['volume'] / sf
         for field in ['open', 'high', 'low', 'close']:
             dfin[field] = dfin[field] * sf
 
+    dfin['volume'] = UINT32_MAX - 1
     return dfin
 
 
 def from_crypto_dir(folder_name, start=None, end=None):
     """
     Crypto data (from Messari) will look like this:
-
     timestamp,open,high,low,close,volume
     2020-09-22T00:00:00Z,6.481369,10.478451,4.043462,5.310313,114002546.794525
     2020-09-23T00:00:00Z,5.249185,5.348590,3.392705,3.526133,103248071.227028
     2020-09-24T00:00:00Z,3.518865,4.885225,3.419303,4.639547,64396127.646014
-
     To use this make your ~/.zipline/extension.py look similar this:
-
     from zipline.data.bundles import register
     from alphacompiler.data.loaders.crypto import from_crypto_dir
-
     register("crypto", from_crypto_dir("/path/to/crypto/data/dir"),)
-
     """
     ticker2sid_map = {}
     us_calendar = TwentyFourSevenCal()
@@ -87,7 +87,10 @@ def from_crypto_dir(folder_name, start=None, end=None):
                 print('No data in: {}, skipping.'.format(fn))
                 continue
 
+            #print(f'the min value of this ticker is: {df_tkr.idxmin()}')
             df_tkr = df_tkr.sort_index()
+            if tkr in TRUE_STARTS:
+                df_tkr = df_tkr[df_tkr.index >= TRUE_STARTS[tkr]]
 
             # check to see if there are missing interstitial dates
             this_cal = us_calendar.sessions_in_range(df_tkr.index[0], df_tkr.index[-1])
