@@ -6,7 +6,8 @@ Created by Peter Harrington (pbharrin) on 3/8/18.
 
 
 import pandas as pd
-from zipline.utils.calendars import get_calendar
+# from zipline.utils.calendars import get_calendar # zipline Quantopian 
+from zipline.utils.calendar_utils import get_calendar # zipline-reloaded
 import sys
 
 # Exchange Metadata (for country code mapping)
@@ -22,7 +23,7 @@ def check_for_abnormal_returns(df, thresh=3.0):
     returns = df['close'].pct_change()
     abnormal_rets = returns[returns > thresh]
     if abnormal_rets.shape[0] > 0:
-        sys.stderr.write('Abnormal returns for: {}\n'.format(df.ix[0]['ticker']))
+        sys.stderr.write('Abnormal returns for: {}\n'.format(df.iloc[0]['ticker']))
         sys.stderr.write('{}\n'.format(str(abnormal_rets)))
 
 
@@ -40,7 +41,8 @@ def from_sep_dump(file_name, start=None, end=None):
          from_sep_dump("/path/to/your/SEP/dump/SHARADAR_SEP_69.csv"),)
 
     """
-    us_calendar = get_calendar("NYSE").all_sessions
+    # us_calendar = get_calendar("NYSE").all_sessions # zipline Quantopian 
+    us_calendar = get_calendar("XNYS") # zipline-reloaded
     ticker2sid_map = {}
 
     def ingest(environ,
@@ -75,13 +77,15 @@ def from_sep_dump(file_name, start=None, end=None):
         for tkr, df_tkr in df.groupby('ticker'):
             df_tkr = df_tkr.sort_index()
 
-            row0 = df_tkr.ix[0]  # get metadata from row
+            row0 = df_tkr.iloc[0]  # get metadata from row
 
             print(" preparing {}".format(row0["ticker"]))
             check_for_abnormal_returns(df_tkr)
 
             # check to see if there are missing dates in the middle
-            this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]
+            # this_cal = us_calendar[(us_calendar >= df_tkr.index[0]) & (us_calendar <= df_tkr.index[-1])]  # zipline Quantopian 
+            this_cal = us_calendar.sessions_in_range(df_tkr.index[0], df_tkr.index[-1]) # zipline-reloaded
+          
             if len(this_cal) != df_tkr.shape[0]:
                 print('MISSING interstitial dates for: %s using forward fill' % row0["ticker"])
                 print('number of dates missing: {}'.format(len(this_cal) - df_tkr.shape[0]))
