@@ -33,6 +33,13 @@ log = Logger('load_quandl_sf1.py')
 
 
 def clear_raw_folder(raw_folder_path):
+    # check if raw exists, else create raw
+    raw_f_path = os.path.join(BASE, "raw") 
+    if not os.path.exists(raw_f_path):
+        # If it doesn't exist, create the "raw" folder
+        os.makedirs(raw_f_path)
+        print(f"The 'raw' folder has been created at: {raw_f_path}")
+        
     # removes all the files in the raw folder
     print('   **   clearing the raw/ folder   **')
     files = glob.glob(raw_folder_path + '/*')
