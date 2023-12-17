@@ -67,7 +67,8 @@ def get_tickers_from_bundle(bundle_name):
     bundle_data = load(bundle_name, os.environ, None)
 
     # get a list of all sids
-    lifetimes = bundle_data.asset_finder._compute_asset_lifetimes(frozenset([str("US")]))
+    #lifetimes = bundle_data.asset_finder._compute_asset_lifetimes(frozenset([str("US")]))
+    lifetimes = bundle_data.asset_finder._compute_asset_lifetimes(country_codes=[str("US")]) # enable zipline-reloaded
     all_sids = lifetimes.sid
 
     # retreive all assets in the bundle
@@ -82,7 +83,8 @@ def get_all_assets_for_bundle(bundle_name):
     bundle_data = load(bundle_name, os.environ, None)
 
     # get a list of all sids
-    lifetimes = bundle_data.asset_finder._compute_asset_lifetimes(frozenset([str("US")]))
+    #lifetimes = bundle_data.asset_finder._compute_asset_lifetimes(frozenset([str("US")]))
+    lifetimes = bundle_data.asset_finder._compute_asset_lifetimes(country_codes=[str("US")]) # enable zipline-reloaded
     all_sids = lifetimes.sid
 
     print('all_sids: ', all_sids)
